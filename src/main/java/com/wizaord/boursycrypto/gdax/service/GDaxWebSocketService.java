@@ -2,6 +2,7 @@ package com.wizaord.boursycrypto.gdax.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
+import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
 import com.wizaord.boursycrypto.gdax.domain.SubscribeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,18 +56,20 @@ public class GDaxWebSocketService {
 //    String subscribeMsg = "{\"type\": \"subscribe\",\"product_ids\": [\"ETH-EUR\"],\"channels\": [\"ticker\", \"user\"]}";
     final String subscribeMsg = jsonMapper.writeValueAsString(subscriberequest);
     LOG.debug("Sending subscribe request : {}", subscribeMsg);
-
-//    auth: {
-//      key: confService.configurationFile.application.auth.apikey,
-//              secret: confService.configurationFile.application.auth.apisecretkey,
-//              passphrase: confService.configurationFile.application.auth.passphrase,
-//    },
     session.getBasicRemote().sendText(subscribeMsg);
   }
 
   @OnMessage
   public void processMessage(String message) {
-    System.out.println("Received message in client: " + message);
+    LOG.debug("GDAX FEED : receive message : {}", message);
+
+    try {
+      final GenericFeedMessage feedMessage = jsonMapper.readValue(message, GenericFeedMessage.class);
+      LOG.info("Received message type: {}" , feedMessage.getType());
+    }
+    catch (IOException e) {
+      LOG.error("Unable to parse the receive feedMessage", e);
+    }
   }
 
   @OnClose
