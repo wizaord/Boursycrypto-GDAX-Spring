@@ -1,7 +1,7 @@
 package com.wizaord.boursycrypto.gdax;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.service.GDaxWebSocketService;
+import com.wizaord.boursycrypto.gdax.listener.FeedListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -41,7 +41,7 @@ public class GdaxApplication {
 
     // start feed
     final WebSocketContainer webSocketContainer = context.getBean(WebSocketContainer.class);
-    final GDaxWebSocketService gDaxWebSocketService = context.getBean(GDaxWebSocketService.class);
+    final FeedListener gDaxWebSocketService = context.getBean(FeedListener.class);
     LOG.info("Connecting WebSocket to URL : {}", GDAX_WEBSOCKET);
     webSocketContainer.connectToServer(gDaxWebSocketService, URI.create(GDAX_WEBSOCKET));
   }

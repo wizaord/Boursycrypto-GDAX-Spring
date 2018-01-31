@@ -1,9 +1,10 @@
-package com.wizaord.boursycrypto.gdax.service;
+package com.wizaord.boursycrypto.gdax.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
 import com.wizaord.boursycrypto.gdax.domain.SubscribeRequest;
+import com.wizaord.boursycrypto.gdax.service.HandleFeedMessageService;
+import com.wizaord.boursycrypto.gdax.service.SignatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,16 +12,13 @@ import org.springframework.stereotype.Service;
 
 import javax.websocket.*;
 import java.io.IOException;
-import java.net.URI;
 import java.time.Instant;
-
-import static com.wizaord.boursycrypto.gdax.config.WebSocketConfiguration.GDAX_WEBSOCKET;
 
 @Service
 @ClientEndpoint
-public class GDaxWebSocketService {
+public class FeedListener {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GDaxWebSocketService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FeedListener.class);
 
   @Autowired
   private ObjectMapper jsonMapper;
@@ -30,6 +28,9 @@ public class GDaxWebSocketService {
 
   @Autowired
   private ApplicationProperties applicationProperties;
+
+  @Autowired
+  private HandleFeedMessageService handleFeedMessageService;
 
 
   @OnOpen
@@ -42,6 +43,7 @@ public class GDaxWebSocketService {
             .type("subscribe")
             .product_id(applicationProperties.getProduct().getName())
             .channel("full")
+            .channel("ticker")
             .channel("user")
             .build();
 
@@ -62,14 +64,7 @@ public class GDaxWebSocketService {
   @OnMessage
   public void processMessage(String message) {
     LOG.debug("GDAX FEED : receive message : {}", message);
-
-    try {
-      final GenericFeedMessage feedMessage = jsonMapper.readValue(message, GenericFeedMessage.class);
-      LOG.info("Received message type: {}" , feedMessage.getType());
-    }
-    catch (IOException e) {
-      LOG.error("Unable to parse the receive feedMessage", e);
-    }
+    this.handleFeedMessageService.handleMessage(message);
   }
 
   @OnClose

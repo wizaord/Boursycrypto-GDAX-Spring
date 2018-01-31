@@ -13,9 +13,9 @@ spring:
     application:
         name: BOURSYCRYPTO GDAX
     profiles:
-        active: BTC
-        #active: ETH
-        #active: LTC
+        include: BTC
+        #include: ETH
+        #include: LTC
     jackson:
         serialization:
           write-dates-as-timestamps : false
