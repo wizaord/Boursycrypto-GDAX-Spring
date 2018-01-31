@@ -1,0 +1,31 @@
+application:
+  auth:
+    apikey: <YourAPIKEY>
+    apisecretkey: <YourAPISECRET>
+    passphrase: 5kc7ylps3w
+  product:
+    name: LTC-EUR
+    type: LTC
+  trader:
+    modeVisualisation: true
+    vente:
+      start:
+        cleanCurrentOrder: false
+      secureStopOrder:
+        activate: true
+        pourcent: 2.5
+      benefice:
+        pourcentBeforeStartVenteMode: 1.5
+        initialPourcent: 0.5
+        followingPourcent: 1
+    achat:
+      activate: true
+      maxBuyAmount: 5
+      pourcentageChuteCoursStopOrder: 3
+  historique:
+    logTendance: false
+    computeDelay: 60000
+    maxHistoriqueComputeKeepInMemory: 100
+  slack:
+    tokenId: xoxp-XXXXX
+    personalAccountChannel: U47L9GF43

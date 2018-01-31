@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true">
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <logger name="com.wizaord" level="debug"/>
+
+    <logger name="org.springframework" level="warn"/>
+    <logger name="org.springframework.web" level="warn"/>
+    <!--<logger name="org.springframework.security" level="INFO"/>-->
+    <!--<logger name="org.springframework.cache" level="INFO"/>-->
+    <logger name="javax.websocket" level="warn"/>
+    <logger name="org.eclipse.jetty" level="WARN"/>
+
+    <logger name="org.springframework.amqp" level="INFO"/>
+
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

@@ -1,0 +1,21 @@
+# ===================================================================
+# Standard Spring Boot properties.
+# Full reference is available at:
+# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+# ===================================================================
+
+server:
+  port: 10000
+  ssl:
+    enabled: false
+  display-name: bourycrypto-gdax
+spring:
+    application:
+        name: BOURSYCRYPTO GDAX
+    profiles:
+        #active: BTC
+        #active: ETH
+        active: LTC
+    jackson:
+        serialization:
+          write-dates-as-timestamps : false

@@ -1,0 +1,43 @@
+buildscript {
+	ext {
+		springBootVersion = '2.0.0.M7'
+	}
+	repositories {
+		mavenCentral()
+		maven { url "https://repo.spring.io/snapshot" }
+		maven { url "https://repo.spring.io/milestone" }
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.wizaord.boursycrypto'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+	maven { url "https://repo.spring.io/snapshot" }
+	maven { url "https://repo.spring.io/milestone" }
+}
+
+dependencies {
+	compile('com.fasterxml.jackson.core:jackson-databind')
+	compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
+	compile('org.springframework.boot:spring-boot-starter-websocket')
+			{
+				exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+			}
+	compile('org.springframework.boot:spring-boot-starter-jetty')
+	compile('org.springframework:spring-messaging')
+	compile('org.springframework.boot:spring-boot-configuration-processor')
+	compileOnly('org.projectlombok:lombok')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('io.projectreactor:reactor-test')
+}
