@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.websocket.DeploymentException;
 import javax.websocket.WebSocketContainer;
@@ -19,6 +20,7 @@ import static com.wizaord.boursycrypto.gdax.config.WebSocketConfiguration.GDAX_W
 
 @SpringBootApplication //@EnableAutoConfiguration , @ComponentScan, SpringBootConfiguration
 @EnableConfigurationProperties(ApplicationProperties.class)
+@EnableScheduling
 public class GdaxApplication {
   private static final Logger LOG = LoggerFactory.getLogger(GdaxApplication.class);
 

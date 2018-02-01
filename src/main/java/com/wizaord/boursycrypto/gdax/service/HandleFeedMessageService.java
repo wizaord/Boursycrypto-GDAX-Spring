@@ -19,6 +19,8 @@ public class HandleFeedMessageService {
 
   @Autowired
   private ObjectMapper jsonMapper;
+  @Autowired
+  private TradeService tradeService;
 
   /**
    * Cette fonction permet à partir d'un object JSON, de recupérer l'ordre recu par GDAX
@@ -26,52 +28,29 @@ public class HandleFeedMessageService {
    *
    * @param message
    */
-  public void handleMessage(String message) {
-    GenericFeedMessage feedMessage = null;
+  public void handleMessage(final String message) {
     try {
-      feedMessage = jsonMapper.readValue(message, GenericFeedMessage.class);
+      final GenericFeedMessage feedMessage = jsonMapper.readValue(message, GenericFeedMessage.class);
+      final Optional<E_FeedMessage> feedMessageType = E_FeedMessage.getByName(feedMessage.getType());
+      if(feedMessageType.isPresent()) {
+        final GenericFeedMessage mapperMessage = jsonMapper.readValue(message, feedMessageType.get().javaType);
+        this.handleGdaxAction(mapperMessage);
+      }
     }
     catch (IOException e) {
       LOG.error("Unable to parse the receive feedMessage", e);
     }
 
-    final Optional<GenericFeedMessage> convertedMessage = this.convertGenericMessage(message, feedMessage.getType());
-
-  }
-
-  /**
-   * Cette fonction convertie le parametre @feedMessage qui est au format JSON en un object JAVA en fonction du type de
-   * message. Si le type n'est pas connu ou si la convertion remonte une erreur, un {@link Optional<GenericFeedMessage>} est retourné.
-   * @param feedMessage : le message recu de GDAX
-   * @param messageType : le type du message recu de GDAX
-   * @return
-   */
-  private Optional<GenericFeedMessage> convertGenericMessage(final String feedMessage, final String messageType) {
-    E_FeedMessage eFeedMessage;
-    GenericFeedMessage convertedFeedMessage = null;
-    try {
-      eFeedMessage = E_FeedMessage.valueOf(messageType.toUpperCase());
-    }
-    catch (IllegalArgumentException e) {
-      LOG.error("Unknow message type " + messageType);
-      return Optional.empty();
-    }
-
-    try {
-      switch (eFeedMessage) {
-        case TICKER:
-          convertedFeedMessage = jsonMapper.readValue(feedMessage, Ticker.class);
-          break;
-      }
-    }
-    catch (IOException e) {
-      LOG.error("unable to convert " + feedMessage + " in internal Object", e);
-    }
-
-    return Optional.ofNullable(convertedFeedMessage);
   }
 
   public void handleGdaxAction(final GenericFeedMessage gdaxAction) {
+    LOG.info("Handle new message with type : " + gdaxAction.getType());
+    if (gdaxAction instanceof Ticker) {
+      this.handleTickerMessage((Ticker) gdaxAction);
+    }
+  }
 
+  protected void handleTickerMessage(final Ticker tickerMessage) {
+    tradeService.notifyNewTickerMessage(tickerMessage);
   }
 }

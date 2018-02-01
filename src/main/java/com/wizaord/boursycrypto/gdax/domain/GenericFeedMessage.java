@@ -1,11 +1,24 @@
 package com.wizaord.boursycrypto.gdax.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-import lombok.Value;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Data
 public class GenericFeedMessage {
-  protected String type;
+  private String type;
+
+  /**
+   * getter for type parameter
+   * @return
+   */
+  public String getType() {
+    return type;
+  }
+
+  /**
+   * Setter for type parameter
+   * @param type
+   */
+  public void setType(final String type) {
+    this.type = type;
+  }
 }
