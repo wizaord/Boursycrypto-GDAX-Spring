@@ -2,8 +2,8 @@ package com.wizaord.boursycrypto.gdax.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.domain.SignatureHeader;
-import com.wizaord.boursycrypto.gdax.domain.SubscribeRequest;
+import com.wizaord.boursycrypto.gdax.domain.auth.SignatureHeader;
+import com.wizaord.boursycrypto.gdax.domain.feedmessage.SubscribeRequest;
 import com.wizaord.boursycrypto.gdax.service.HandleFeedMessageService;
 import com.wizaord.boursycrypto.gdax.service.SignatureService;
 import org.slf4j.Logger;

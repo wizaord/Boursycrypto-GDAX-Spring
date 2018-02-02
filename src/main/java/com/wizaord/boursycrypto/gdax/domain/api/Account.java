@@ -1,4 +1,4 @@
-package com.wizaord.boursycrypto.gdax.domain;
+package com.wizaord.boursycrypto.gdax.domain.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

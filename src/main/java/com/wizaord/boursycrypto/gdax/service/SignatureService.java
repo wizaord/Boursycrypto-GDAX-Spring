@@ -1,7 +1,7 @@
 package com.wizaord.boursycrypto.gdax.service;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.domain.SignatureHeader;
+import com.wizaord.boursycrypto.gdax.domain.auth.SignatureHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

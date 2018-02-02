@@ -1,4 +1,4 @@
-package com.wizaord.boursycrypto.gdax.domain;
+package com.wizaord.boursycrypto.gdax.domain.feedmessage;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;

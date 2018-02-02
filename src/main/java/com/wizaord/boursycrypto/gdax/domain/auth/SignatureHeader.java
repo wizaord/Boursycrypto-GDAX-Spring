@@ -1,4 +1,4 @@
-package com.wizaord.boursycrypto.gdax.domain;
+package com.wizaord.boursycrypto.gdax.domain.auth;
 
 import lombok.Value;
 

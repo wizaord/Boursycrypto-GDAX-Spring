@@ -1,7 +1,7 @@
 package com.wizaord.boursycrypto.gdax.service;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.domain.Account;
+import com.wizaord.boursycrypto.gdax.domain.api.Account;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +22,8 @@ public class AccountService {
   @Autowired
   private ApplicationProperties appProp;
 
-  private Float money;
-  private Float btc;
+  private Double money;
+  private Double btc;
 
   /**
    * Refresh the money and btc from the GDAX account
@@ -37,12 +37,12 @@ public class AccountService {
       Arrays.asList(accounts.getBody()).stream()
               .filter(account -> account.getCurrency().equals(appProp.getProduct().getType()))
               .findFirst()
-              .ifPresent(account -> this.btc = account.getAvailable().floatValue());
+              .ifPresent(account -> this.btc = account.getAvailable().doubleValue());
 
       Arrays.asList(accounts.getBody()).stream()
-              .filter(account -> account.getCurrency().equals(appProp.getProduct().getType()))
+              .filter(account -> account.getCurrency().equals("EUR"))
               .findFirst()
-              .ifPresent(account -> this.money = account.getAvailable().floatValue());
+              .ifPresent(account -> this.money = account.getAvailable().doubleValue());
     }
 
     this.logBalance();
@@ -56,11 +56,11 @@ public class AccountService {
     LOG.info("----------------------------------------------------");
   }
 
-  public Float getMoney() {
+  public Double getMoney() {
     return money;
   }
 
-  public Float getBtc() {
+  public Double getBtc() {
     return btc;
   }
 }

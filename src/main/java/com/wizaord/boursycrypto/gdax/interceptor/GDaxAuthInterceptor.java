@@ -1,6 +1,6 @@
 package com.wizaord.boursycrypto.gdax.interceptor;
 
-import com.wizaord.boursycrypto.gdax.domain.SignatureHeader;
+import com.wizaord.boursycrypto.gdax.domain.auth.SignatureHeader;
 import com.wizaord.boursycrypto.gdax.service.SignatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
