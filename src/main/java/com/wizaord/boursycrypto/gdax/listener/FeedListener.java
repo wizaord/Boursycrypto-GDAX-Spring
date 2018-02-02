@@ -2,6 +2,7 @@ package com.wizaord.boursycrypto.gdax.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
+import com.wizaord.boursycrypto.gdax.domain.SignatureHeader;
 import com.wizaord.boursycrypto.gdax.domain.SubscribeRequest;
 import com.wizaord.boursycrypto.gdax.service.HandleFeedMessageService;
 import com.wizaord.boursycrypto.gdax.service.SignatureService;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import javax.websocket.*;
 import java.io.IOException;
-import java.time.Instant;
 
 @Service
 @ClientEndpoint
@@ -37,7 +37,6 @@ public class FeedListener {
   public void onOpen(Session session) throws IOException {
     LOG.info("Sending subscribe request to the webSocket");
 
-    final String timestamp = String.valueOf(Instant.now().getEpochSecond());
 
     final SubscribeRequest subscriberequest = SubscribeRequest.builder()
             .type("subscribe")
@@ -49,13 +48,14 @@ public class FeedListener {
 
     final String subscribeJson = jsonMapper.writeValueAsString(subscriberequest);
 
-    //add auth data
-    subscriberequest.setTimestamp(String.valueOf(timestamp));
-    subscriberequest.setKey(applicationProperties.getAuth().getApikey());
-    subscriberequest.setPassphrase(applicationProperties.getAuth().getPassphrase());
-    subscriberequest.setSignature(signatureService.generate("", "GET", subscribeJson, timestamp));
+    final SignatureHeader signature = signatureService.getSignature("", "GET", subscribeJson);
 
-//    String subscribeMsg = "{\"type\": \"subscribe\",\"product_ids\": [\"ETH-EUR\"],\"channels\": [\"ticker\", \"user\"]}";
+    //add auth data
+    subscriberequest.setTimestamp(signature.getCbAccessTimestamp());
+    subscriberequest.setKey(signature.getCbAccessKey());
+    subscriberequest.setPassphrase(signature.getCbAccessPassphrase());
+    subscriberequest.setSignature(signature.getCbAccessSign());
+
     final String subscribeMsg = jsonMapper.writeValueAsString(subscriberequest);
     LOG.debug("Sending subscribe request : {}", subscribeMsg);
     session.getBasicRemote().sendText(subscribeMsg);

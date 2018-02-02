@@ -17,7 +17,8 @@ public class TradeService {
   private E_TradingMode traderMode = E_TradingMode.NOORDER;
 
   public void notifyNewTickerMessage(final Ticker ticMessage) {
-      this.currentPriceReceive = ticMessage.getPrice().floatValue();
+      this.lastCurrentPriceReceived = ticMessage.getPrice().floatValue();
+      LOG.info("New Ticker value {}", this.lastCurrentPriceReceived.floatValue());
   }
 
   /**
@@ -42,23 +43,40 @@ public class TradeService {
       // on va travailler avec le currentPrice, on le sauvegarde
       this.currentPrice = this.lastCurrentPriceReceived;
 
-      switch (this.traderMode) {
-        case NOORDER:
-          LOG.info("MODE UNKNOWN- determination du mode de fonctionnement");
-          this.determineTradeMode();
-          break;
-        case ACHAT:
-          LOG.info("MODE ACHAT - cours {]", this.currentPrice);
-          this.doTradingBuy();
-          break;
-        case VENTE:
-          this.logVenteEvolution();
-          if (! Boolean(this.confService.configurationFile.application.trader.modeVisualisation)) {
-            this.options.logger.log('debug', 'MODE VENTE');
-            this.doTradingSell();
-          }
-          break;
-      }
+//      switch (this.traderMode) {
+//        case NOORDER:
+//          LOG.info("MODE UNKNOWN- determination du mode de fonctionnement");
+//          this.determineTradeMode();
+//          break;
+//        case ACHAT:
+//          LOG.info("MODE ACHAT - cours {]", this.currentPrice);
+//          this.doTradingBuy();
+//          break;
+//        case VENTE:
+//          this.logVenteEvolution();
+//          if (! Boolean(this.confService.configurationFile.application.trader.modeVisualisation)) {
+//            this.options.logger.log('debug', 'MODE VENTE');
+//            this.doTradingSell();
+//          }
+//          break;
+//      }
     }
-  }
+
+//  /**
+//   * Fonction qui permet de determiner dans quel mode de fonctionnement on se trouve
+//   */
+//  private E_TradingMode determineTradeMode() {
+//    // this.traderMode = E_TRADEMODE.ACHAT;
+//    // on va verifier si on a pas encore des coins.
+//    if (this.accountService.btc > 0) {
+//      this.options.logger.log('info', 'CHECK MODE - coin in wallet <' + this.accountService.btc.toFixed(4) + '>. Looking for last buy order');
+//      this.customOrder.getLastBuyFill().then((order) => {
+//              this.options.logger.log('info', 'CHECK MODE - Find last order buy. Inject order in this AWESOME project');
+//      this.notifyNewOrder(order);
+//            });
+//    } else {
+//      this.options.logger.log('info', 'CHECK MODE - No Btc in wallet. Set en ACHAT MODE');
+//      this.traderMode = E_TRADEMODE.ACHAT;
+//    }
+//  }
 }

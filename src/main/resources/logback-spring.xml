@@ -3,10 +3,11 @@
 <configuration scan="true">
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <logger name="com.wizaord" level="debug"/>
+    <logger name="com.wizaord" level="DEBUG"/>
+    <logger name="com.wizaord.boursycrypto.gdax.listener" level="INFO"/>
 
     <logger name="org.springframework" level="warn"/>
-    <logger name="org.springframework.web" level="warn"/>
+    <logger name="org.springframework.web" level="debug"/>
     <!--<logger name="org.springframework.security" level="INFO"/>-->
     <!--<logger name="org.springframework.cache" level="INFO"/>-->
     <logger name="javax.websocket" level="warn"/>

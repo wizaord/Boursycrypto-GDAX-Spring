@@ -1,10 +1,10 @@
 package com.wizaord.boursycrypto.gdax.service;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
+import com.wizaord.boursycrypto.gdax.domain.SignatureHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
@@ -12,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.management.RuntimeErrorException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Base64;
 
 @Component
@@ -36,6 +37,9 @@ public class SignatureService {
    */
   public String generate(String requestPath, String method, String body, String timestamp) {
     LOG.info("Generate Signature service with body : " + body);
+    if (body == null) {
+      body = "";
+    }
     try {
       String prehash = timestamp + method.toUpperCase() + requestPath + body;
       byte[] secretDecoded = Base64.getDecoder().decode(applicationProperties.getAuth().getApisecretkey());
@@ -51,5 +55,14 @@ public class SignatureService {
       e.printStackTrace();
       throw new RuntimeErrorException(new Error("Algorithme HmacSHA256 not implemented"));
     }
+  }
+
+  public SignatureHeader getSignature(final String requestPath, final String methodType, final String messageContent) {
+
+    final String timestamp = String.valueOf(Instant.now().getEpochSecond());
+    return new SignatureHeader(applicationProperties.getAuth().getApikey(),
+            this.generate(requestPath, methodType, messageContent, timestamp),
+            String.valueOf(timestamp),
+            applicationProperties.getAuth().getPassphrase());
   }
 }

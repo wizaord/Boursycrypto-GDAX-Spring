@@ -2,7 +2,6 @@ package com.wizaord.boursycrypto.gdax.domain.feedmessage;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
-import lombok.Data;
 import lombok.Value;
 
 import java.math.BigDecimal;

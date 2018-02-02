@@ -44,7 +44,7 @@ public class HandleFeedMessageService {
   }
 
   public void handleGdaxAction(final GenericFeedMessage gdaxAction) {
-    LOG.info("Handle new message with type : " + gdaxAction.getType());
+    LOG.debug("Handle new message with type : " + gdaxAction.getType());
     if (gdaxAction instanceof Ticker) {
       this.handleTickerMessage((Ticker) gdaxAction);
     }
