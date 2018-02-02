@@ -36,7 +36,7 @@ public class SignatureService {
    * @return
    */
   public String generate(String requestPath, String method, String body, String timestamp) {
-    LOG.info("Generate Signature service with body : " + body);
+    LOG.debug("Generate Signature service with body : " + body);
     if (body == null) {
       body = "";
     }

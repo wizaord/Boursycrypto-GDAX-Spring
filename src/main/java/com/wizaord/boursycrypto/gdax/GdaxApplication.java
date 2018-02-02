@@ -2,6 +2,7 @@ package com.wizaord.boursycrypto.gdax;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.listener.FeedListener;
+import com.wizaord.boursycrypto.gdax.service.AccountService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -40,6 +41,10 @@ public class GdaxApplication {
                     "Profile(s): \t{}\n----------------------------------------------------------",
             env.getProperty("spring.application.name"),
             env.getActiveProfiles());
+
+    // loading account
+    final AccountService accService = context.getBean(AccountService.class);
+    accService.refreshBalance();
 
     // start feed
     final WebSocketContainer webSocketContainer = context.getBean(WebSocketContainer.class);

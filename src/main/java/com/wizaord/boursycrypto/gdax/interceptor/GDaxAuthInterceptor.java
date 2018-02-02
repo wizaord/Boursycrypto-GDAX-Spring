@@ -12,11 +12,8 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 
 import static com.wizaord.boursycrypto.gdax.config.RestConfiguration.GDAX_URI;
 
@@ -47,10 +44,7 @@ public class GDaxAuthInterceptor implements ClientHttpRequestInterceptor {
     headers.add("CB-ACCESS-TIMESTAMP", signature.getCbAccessTimestamp());
     headers.add("CB-ACCESS-PASSPHRASE", signature.getCbAccessPassphrase());
 
-    ClientHttpResponse clientHttpResponse = execution.execute(request, body);
-    traceResponse(clientHttpResponse);
-
-    return clientHttpResponse;
+    return execution.execute(request, body);
   }
 
   private String getRequestBody(byte[] body) throws UnsupportedEncodingException {
@@ -61,33 +55,4 @@ public class GDaxAuthInterceptor implements ClientHttpRequestInterceptor {
     }
   }
 
-  private void traceResponse(ClientHttpResponse response) throws IOException {
-    String body = getBodyString(response);
-    LOG.debug("response status code: " + response.getStatusCode());
-    LOG.debug("response status text: " + response.getStatusText());
-    LOG.debug("response body : " + body);
-  }
-
-  private String getBodyString(ClientHttpResponse response) {
-    try {
-      if (response != null && response.getBody() != null) {// &&
-        // isReadableResponse(response))
-        // {
-        StringBuilder inputStringBuilder = new StringBuilder();
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody(), StandardCharsets.UTF_8));
-        String line = bufferedReader.readLine();
-        while (line != null) {
-          inputStringBuilder.append(line);
-          inputStringBuilder.append('\n');
-          line = bufferedReader.readLine();
-        }
-        return inputStringBuilder.toString();
-      } else {
-        return null;
-      }
-    } catch (IOException e) {
-      LOG.error(e.getMessage(), e);
-      return null;
-    }
-  }
 }

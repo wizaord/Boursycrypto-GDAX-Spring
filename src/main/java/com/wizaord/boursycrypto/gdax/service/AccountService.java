@@ -1,13 +1,16 @@
 package com.wizaord.boursycrypto.gdax.service;
 
+import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.Account;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
 
 @Service
 public class AccountService {
@@ -16,6 +19,8 @@ public class AccountService {
 
   @Autowired
   private RestTemplate restTemplate;
+  @Autowired
+  private ApplicationProperties appProp;
 
   private Float money;
   private Float btc;
@@ -23,25 +28,32 @@ public class AccountService {
   /**
    * Refresh the money and btc from the GDAX account
    */
-  @Scheduled(fixedRate = 5000)
   public void refreshBalance() {
     LOG.debug("Retrieving account balances..");
     final ResponseEntity<Account[]> accounts = restTemplate.getForEntity("/accounts", Account[].class);
-    LOG.info("Receive response {}", accounts);
-    //    return Promise.resolve(this.gdaxExchangeApi.loadBalances().then((balances: Balances) => {
-//      for (const profile in balances) {
-//                const account = balances[profile];
-//        this._money = Number(account.EUR.available);
-//        this._btc = Number(account[this.confService.configurationFile.application.product.type].available);
-//      }
-//      this.logBalance();
-//      return true;
-//    })).catch((reason) => {
-//            this.options.logger.log('error', 'Error while get the account balance');
-//    this.options.logger.error(reason);
-//    logError(reason);
-//    return Promise.reject(reason);
-//        });
+    if (accounts.getStatusCode() != HttpStatus.OK) {
+      LOG.error("Unable to get the user account");
+    } else {
+      Arrays.asList(accounts.getBody()).stream()
+              .filter(account -> account.getCurrency().equals(appProp.getProduct().getType()))
+              .findFirst()
+              .ifPresent(account -> this.btc = account.getAvailable().floatValue());
+
+      Arrays.asList(accounts.getBody()).stream()
+              .filter(account -> account.getCurrency().equals(appProp.getProduct().getType()))
+              .findFirst()
+              .ifPresent(account -> this.money = account.getAvailable().floatValue());
+    }
+
+    this.logBalance();
+  }
+
+  public void logBalance() {
+    LOG.info("----------------------------------------------------");
+    LOG.info("Balance successfully loaded : ");
+    LOG.info("   Money: {} €", this.money);
+    LOG.info("   BTC:   {} BTC", this.btc);
+    LOG.info("----------------------------------------------------");
   }
 
   public Float getMoney() {
