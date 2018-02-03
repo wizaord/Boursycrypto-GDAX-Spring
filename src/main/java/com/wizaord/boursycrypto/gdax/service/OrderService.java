@@ -59,6 +59,7 @@ public class OrderService {
     final Optional<List<Fill>> fills = this.loadFills();
     if (fills.isPresent()) {
       return fills.get().stream()
+              .filter(fill -> fill.getSide().equals("buy"))
               .sorted((o1, o2) -> (int) ((o1.getTrade_id() - o2.getTrade_id()) * -1))
               .findFirst();
     }
