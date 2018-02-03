@@ -2,6 +2,7 @@ package com.wizaord.boursycrypto.gdax.service;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.E_TradingMode;
+import com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
@@ -16,6 +17,8 @@ import java.util.Optional;
 
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.ACHAT;
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.VENTE;
+import static com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode.BENEFICE;
+import static com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode.WAITING_FOR_BENEFICE;
 import static com.wizaord.boursycrypto.gdax.utils.MathUtils.df;
 
 @Service
@@ -82,6 +85,9 @@ public class TradeService {
     }
   }
 
+  /**
+   * Fonction qui permet de determiner dans quel mode de fonctionnement on se trouve
+   */
   private void determineTradeMode() {
     // on va verifier si on a pas encore des coins.
     if (this.accountService.getBtc() > 0) {
@@ -95,6 +101,38 @@ public class TradeService {
     }
     LOG.info("CHECK MODE - No Btc in wallet. Set en ACHAT MODE");
     this.traderMode = ACHAT;
+  }
+
+
+  /**
+   * Fonction qui détermine le mode de vente. Soit en benefice et on suit la courbe. Soit en mode attente
+   * On est en mode benefice et donc on suit la courbe qui monte si :
+   * - possible si stopOrder n'existe pas              et benefice supérieur à la valeur configurée dans le fichier de configuration
+   * - possible si stopOrder inférieur au prix d'achat et benefice supérieur à la valeur configurée dans le fichier de configuration
+   * - possible si le prix du stopOrder est supérieur au prix d'achat => deja en mode benefice
+   *
+   * @returns {E_TRADESELLMODE}
+   */
+  private E_TradingSellMode determineTradeSellMode() {
+    final double coursRequisPourBenefice = MathUtils
+            .calculateAddPourcent(this.lastBuyOrder.getPrice().doubleValue(), appProp.getTrader().getVente().getBenefice()
+                    .getPourcentBeforeStartVenteMode());
+    final double lastOrderPrice = this.lastBuyOrder.getPrice().doubleValue();
+    final boolean isStopOrderPlaced = (this.stopOrderCurrentOrder != null);
+
+    if (isStopOrderPlaced) {
+      final double stopOrderPrice = this.stopOrderCurrentOrder.getPrice().doubleValue();
+      if (stopOrderPrice > lastOrderPrice) {
+        // on est dans le cas où on a déjà été en BENEFICE. On y reste
+        return BENEFICE;
+      }
+    }
+    // le stop order est posé ou pas. On est en bénéfice uniquement si le cours le permet
+    if (this.currentPrice >= coursRequisPourBenefice) {
+      return BENEFICE;
+    }
+    // on a pas engendré assez de bénéfices
+    return WAITING_FOR_BENEFICE;
   }
 
   public void notifyNewOrder(final Order order) {
@@ -146,18 +184,59 @@ public class TradeService {
     //      - possible si stopOrder n'existe pas              et benefice supérieur à la valeur configurée dans le fichier de configuration
     //      - possible si stopOrder inférieur au prix d'achat et benefice supérieur à la valeur configurée dans le fichier de configuration
     //      - possible si le prix du stopOrder est supérieur au prix d'achat => deja en mode benefice
-//        const sellMode = this.determineTradeSellMode();
-//    switch (sellMode) {
-//      case E_TRADESELLMODE.WAITING_FOR_BENEFICE:
-//                const coursRequisPourBenefice = MathUtils
-//              .calculateAddPourcent(Number(this.lastBuyOrder.price), this.pourcentBeforeStartVenteMode);
-//        this.options.logger.log('debug', 'MODE VENTE - Not enougth benef. Waiting benefice to : ' + coursRequisPourBenefice);
-//        break;
-//      case E_TRADESELLMODE.BENEFICE:
-//        this.options.logger.log('info', 'MODE VENTE - Benefice OK');
-//        this.doTradingSellBenefice();
-//        break;
-//    }
+    E_TradingSellMode sellMode = this.determineTradeSellMode();
+    switch (sellMode) {
+      case WAITING_FOR_BENEFICE:
+        final double coursRequisPourBenefice = MathUtils
+                .calculateAddPourcent(this.lastBuyOrder.getPrice().doubleValue(), this.appProp.getTrader().getVente().getBenefice()
+                        .getPourcentBeforeStartVenteMode());
+        LOG.debug("MODE VENTE - Not enougth benef. Waiting benefice to : {}", df.format(coursRequisPourBenefice));
+        break;
+      case BENEFICE:
+        LOG.info("MODE VENTE - Benefice OK");
+        this.doTradingSellBenefice();
+        break;
+    }
+  }
+
+  /**
+   * Fonction de gestion quand on est en mode vente et BENEFICE
+   * Si le stopOrder n'est pas positionné ou inférieur au prix du lastOrderPrice, on le position au seuil minimal
+   * Ensuite on fait monter ce stopOrder en fonction du cours
+   */
+  private void doTradingSellBenefice() {
+    final double lastOrderPrice = this.lastBuyOrder.getPrice().doubleValue();
+    final double seuilStopPrice = MathUtils
+            .calculateAddPourcent(lastOrderPrice, this.appProp.getTrader().getVente().getBenefice().getInitialPourcent());
+    final boolean isStopOrderPlaced = (this.stopOrderCurrentOrder != null);
+
+    // test si aucun stop order n'est positionné
+    if (!isStopOrderPlaced) {
+      // positionnement d'un stop order au prix seuil
+      this.stopOrderPlace(seuilStopPrice);
+      return;
+    }
+
+    // recuperation du seuil du stopOrder
+    final double currentStopOrderPrice = this.stopOrderCurrentOrder.getPrice().doubleValue();
+
+    // test si le stop order est le stop de secours
+    if (isStopOrderPlaced && currentStopOrderPrice < lastOrderPrice) {
+      this.stopOrderPlace(seuilStopPrice);
+      return;
+    }
+
+    // on est dans les benefices et on a le stop order deja positionne pour assurer notre argent.
+    // on fait donc monter le stop en fonction de la hausse de la courbe
+    final double newStopOrderPrice = MathUtils
+            .calculateRemovePourcent(this.currentPrice, this.appProp.getTrader().getVente().getBenefice().getFollowingPourcent());
+
+    if (newStopOrderPrice <= currentStopOrderPrice) {
+      LOG.info("Cours en chute, on ne repositionne pas le stopOrder qui est a {}", df.format(currentStopOrderPrice));
+    } else {
+      this.stopOrderPlace(newStopOrderPrice);
+      return;
+    }
   }
 
 
