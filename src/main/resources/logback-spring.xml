@@ -6,20 +6,16 @@
     <logger name="com.wizaord" level="DEBUG"/>
     <logger name="com.wizaord.boursycrypto.gdax.listener" level="INFO"/>
 
-    <logger name="org.springframework" level="warn"/>
-    <logger name="org.springframework.web" level="debug"/>
-    <!--<logger name="org.springframework.security" level="INFO"/>-->
-    <!--<logger name="org.springframework.cache" level="INFO"/>-->
-    <logger name="javax.websocket" level="warn"/>
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.web" level="WARN"/>
+    <logger name="javax.websocket" level="WARN"/>
     <logger name="org.eclipse.jetty" level="WARN"/>
-
-    <logger name="org.springframework.amqp" level="INFO"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>
     </contextListener>
 
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="CONSOLE"/>
     </root>
 

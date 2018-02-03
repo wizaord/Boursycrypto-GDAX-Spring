@@ -12,11 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.text.DecimalFormat;
 import java.util.Optional;
 
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.ACHAT;
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.VENTE;
+import static com.wizaord.boursycrypto.gdax.utils.MathUtils.df;
 
 @Service
 public class TradeService {
@@ -30,7 +30,6 @@ public class TradeService {
   @Autowired
   private ApplicationProperties appProp;
 
-  private DecimalFormat df = new DecimalFormat("#.##");
   private Double lastCurrentPriceReceived;
   private double currentPrice;
   private E_TradingMode traderMode = E_TradingMode.NOORDER;
@@ -172,7 +171,7 @@ public class TradeService {
       this.orderService.cancelOrder(this.stopOrderCurrentOrder.getId());
       this.stopOrderCurrentOrder = null;
     }
-    this.orderService.placeStopSellOrder(price, this.accountService.getBtc())
+    this.orderService.placeStopSellOrder(10, this.accountService.getBtc())
             .ifPresent(order -> this.stopOrderCurrentOrder = order);
   }
 }

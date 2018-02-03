@@ -4,6 +4,7 @@ import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
 import com.wizaord.boursycrypto.gdax.domain.api.PlaceOrder;
+import com.wizaord.boursycrypto.gdax.utils.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,21 +65,49 @@ public class OrderService {
     return Optional.empty();
   }
 
+  public void cancelOrders() {
+      this.loadOrders().orElse(Arrays.asList())
+              .stream()
+              .forEach(order -> this.cancelOrder(order.getId()));
+  }
+
   public void cancelOrder(final String orderId) {
-    LOG.debug("Cancel order with ID {}", orderId);
+    LOG.info("Cancel order with ID {}", orderId);
     restTemplate.delete("/orders/" + orderId);
+  }
+
+  public Optional<Order> placeLimitSellOrder(final double price, final double nbCoin) {
+    LOG.info("Place a SELL LIMIT ORDER TO {}", price);
+    final PlaceOrder placeOrder = PlaceOrder.builder()
+            .productId(this.applicationProperties.getProduct().getName())
+            .side("sell")
+            .type("limit")
+            .size(String.valueOf(nbCoin))
+            .price(MathUtils.df.format(price))
+            .build();
+
+    LOG.info("Positionnement d'un Limit Order en vente a {} pour {}", MathUtils.df.format(price), nbCoin);
+    //    SlackService._instance.postMessage('positionnement d un stopOrder a ' + priceP + ' pour ' + nbCoin + ' coins');
+
+    final ResponseEntity<Order> placeOrderResponse = restTemplate.postForEntity("/orders", placeOrder, Order.class);
+    if (placeOrderResponse.getStatusCode() != HttpStatus.OK) {
+      LOG.error("Unable to place the orders : {}", placeOrderResponse.toString());
+      return Optional.empty();
+    } else {
+      return Optional.of(placeOrderResponse.getBody());
+    }
   }
 
   public Optional<Order> placeStopSellOrder(final double priceP, final double nbCoin) {
     LOG.info("Place a STOP ORDER TO {}", priceP);
     final PlaceOrder placeOrder = PlaceOrder.builder()
             .productId(this.applicationProperties.getProduct().getName())
+            .size(String.valueOf(nbCoin))
+            .price(String.valueOf(priceP))
             .side("sell")
-//            .type("market")
-            .size("0.1")
-            .price("800")
-//            .stop("loss")
-//            .stopPrice(String.valueOf(priceP))
+            .type("market")
+            .stop("loss")
+            .stopPrice(String.valueOf(priceP))
             .build();
 
     LOG.info("Positionnement d'un StopOrder a {} pour {}", priceP, nbCoin);

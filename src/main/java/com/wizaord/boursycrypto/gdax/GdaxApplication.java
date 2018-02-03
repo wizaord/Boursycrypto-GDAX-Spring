@@ -1,9 +1,6 @@
 package com.wizaord.boursycrypto.gdax;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.listener.FeedListener;
-import com.wizaord.boursycrypto.gdax.service.AccountService;
-import com.wizaord.boursycrypto.gdax.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -14,11 +11,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.websocket.DeploymentException;
-import javax.websocket.WebSocketContainer;
 import java.io.IOException;
-import java.net.URI;
-
-import static com.wizaord.boursycrypto.gdax.config.WebSocketConfiguration.GDAX_WEBSOCKET;
 
 @SpringBootApplication //@EnableAutoConfiguration , @ComponentScan, SpringBootConfiguration
 @EnableConfigurationProperties(ApplicationProperties.class)
@@ -42,19 +35,5 @@ public class GdaxApplication {
                     "Profile(s): \t{}\n----------------------------------------------------------",
             env.getProperty("spring.application.name"),
             env.getActiveProfiles());
-
-    // loading account
-    final AccountService accService = context.getBean(AccountService.class);
-    accService.refreshBalance();
-
-    //load last orders
-    final OrderService orderService = context.getBean(OrderService.class);
-    orderService.loadOrders();
-
-    // start feed
-    final WebSocketContainer webSocketContainer = context.getBean(WebSocketContainer.class);
-    final FeedListener gDaxWebSocketService = context.getBean(FeedListener.class);
-    LOG.info("Connecting WebSocket to URL : {}", GDAX_WEBSOCKET);
-    webSocketContainer.connectToServer(gDaxWebSocketService, URI.create(GDAX_WEBSOCKET));
   }
 }
