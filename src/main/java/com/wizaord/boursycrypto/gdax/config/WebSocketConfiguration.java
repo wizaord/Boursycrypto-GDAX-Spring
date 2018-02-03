@@ -1,6 +1,5 @@
 package com.wizaord.boursycrypto.gdax.config;
 
-import com.wizaord.boursycrypto.gdax.service.GDaxWebSocketService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -9,10 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import javax.annotation.PostConstruct;
 import javax.websocket.ContainerProvider;
 import javax.websocket.DeploymentException;
-import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 import java.io.IOException;
-import java.net.URI;
 
 @Configuration
 public class WebSocketConfiguration {

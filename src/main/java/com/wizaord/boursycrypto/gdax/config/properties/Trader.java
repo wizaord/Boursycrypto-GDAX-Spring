@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class Trader {
-  private String modeVisualisation;
+  private Boolean modeVisualisation;
   private Vente vente;
   private Achat achat;
 }

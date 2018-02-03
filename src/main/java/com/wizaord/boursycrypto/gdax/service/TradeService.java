@@ -1,5 +1,6 @@
 package com.wizaord.boursycrypto.gdax.service;
 
+import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.E_TradingMode;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
@@ -26,12 +27,15 @@ public class TradeService {
   private AccountService accountService;
   @Autowired
   private OrderService orderService;
+  @Autowired
+  private ApplicationProperties appProp;
 
   private DecimalFormat df = new DecimalFormat("#.##");
   private Double lastCurrentPriceReceived;
   private double currentPrice;
   private E_TradingMode traderMode = E_TradingMode.NOORDER;
-  private Order lastOrder;
+  private Order lastBuyOrder;
+  private Order stopOrderCurrentOrder;
 
   public void notifyNewTickerMessage(final Ticker ticMessage) {
     this.lastCurrentPriceReceived = ticMessage.getPrice().doubleValue();
@@ -71,10 +75,10 @@ public class TradeService {
         break;
       case VENTE:
         this.logVenteEvolution();
-        //        if (!Boolean(this.confService.configurationFile.application.trader.modeVisualisation)) {
-        //          this.options.logger.log('debug', 'MODE VENTE');
-        //          this.doTradingSell();
-        //        }
+        if (!this.appProp.getTrader().getModeVisualisation()) {
+          LOG.debug("MODE VENTE");
+          this.doTradingSell();
+        }
         break;
     }
   }
@@ -98,14 +102,14 @@ public class TradeService {
     LOG.info("NEW ORDER - Receive order {}", order);
     //    SlackService._instance.postMessage('NEW ORDER - Handle order ' + JSON.stringify(order));
     this.accountService.refreshBalance();
-    this.lastOrder = order;
+    this.lastBuyOrder = order;
     this.traderMode = VENTE;
   }
 
   public void logVenteEvolution() {
-    final double fee = this.lastOrder.getFill_fees().doubleValue();
-    final double price = this.lastOrder.getPrice().doubleValue();
-    final double evolution = MathUtils.calculatePourcentDifference(this.currentPrice, this.lastOrder.getPrice().doubleValue());
+    final double fee = this.lastBuyOrder.getFill_fees().doubleValue();
+    final double price = this.lastBuyOrder.getPrice().doubleValue();
+    final double evolution = MathUtils.calculatePourcentDifference(this.currentPrice, this.lastBuyOrder.getPrice().doubleValue());
 
     String message = "COURS EVOL : - achat " + df.format(price) + " - fee " + df.format(fee) + " - now " + this.currentPrice;
     message += " - benefice " + df.format(this.getBalance(this.currentPrice)) + "€ - evolution " + df.format(evolution) + "%";
@@ -114,13 +118,61 @@ public class TradeService {
 
 
   public double getBalance(final double currentPrice) {
-    final double lastOrderPrice = this.lastOrder.getPrice().doubleValue();
-    final double quantity = this.lastOrder.getSize().doubleValue();
-    final double feeAchat = this.lastOrder.getFill_fees().doubleValue();
+    final double lastOrderPrice = this.lastBuyOrder.getPrice().doubleValue();
+    final double quantity = this.lastBuyOrder.getSize().doubleValue();
+    final double feeAchat = this.lastBuyOrder.getFill_fees().doubleValue();
     final double feeVente = quantity * currentPrice * 0.0025;
 
     final double prixVente = (quantity * currentPrice) - feeVente;
     final double coutAchat = (quantity * lastOrderPrice) + feeAchat;
     return prixVente - coutAchat;
+  }
+
+  /**
+   * realisation du trading en mode VENTE
+   */
+  private void doTradingSell() {
+    final boolean isStopOrderPlaced = (this.stopOrderCurrentOrder == null);
+
+    // positionnement du stop order de secours si activé dans le fichier de configuration
+    if (this.appProp.getTrader().getVente().getSecureStopOrder().getActivate() && isStopOrderPlaced) {
+      final double negativeWaitPourcent = this.appProp.getTrader().getVente().getSecureStopOrder().getPourcent();
+      final double stopPrice = MathUtils.calculateRemovePourcent(this.currentPrice, negativeWaitPourcent);
+      LOG.info("MODE VENTE - Place a SECURE stop order to {}", df.format(stopPrice));
+      this.stopOrderPlace(stopPrice);
+      return;
+    }
+
+    // on verifie si on est deja en benefice ou non
+    //      - possible si stopOrder n'existe pas              et benefice supérieur à la valeur configurée dans le fichier de configuration
+    //      - possible si stopOrder inférieur au prix d'achat et benefice supérieur à la valeur configurée dans le fichier de configuration
+    //      - possible si le prix du stopOrder est supérieur au prix d'achat => deja en mode benefice
+//        const sellMode = this.determineTradeSellMode();
+//    switch (sellMode) {
+//      case E_TRADESELLMODE.WAITING_FOR_BENEFICE:
+//                const coursRequisPourBenefice = MathUtils
+//              .calculateAddPourcent(Number(this.lastBuyOrder.price), this.pourcentBeforeStartVenteMode);
+//        this.options.logger.log('debug', 'MODE VENTE - Not enougth benef. Waiting benefice to : ' + coursRequisPourBenefice);
+//        break;
+//      case E_TRADESELLMODE.BENEFICE:
+//        this.options.logger.log('info', 'MODE VENTE - Benefice OK');
+//        this.doTradingSellBenefice();
+//        break;
+//    }
+  }
+
+
+  /**
+   * Fonction qui positionne un stopOrder a XX% en dessous du court actuel.
+   * Le XX% est configurable dans le fichier de configuration
+   */
+  public void stopOrderPlace(final double price) {
+    // si un stop order est deja present, il faut le supprimer
+    if (this.stopOrderCurrentOrder != null) {
+      this.orderService.cancelOrder(this.stopOrderCurrentOrder.getId());
+      this.stopOrderCurrentOrder = null;
+    }
+    this.orderService.placeStopSellOrder(price, this.accountService.getBtc())
+            .ifPresent(order -> this.stopOrderCurrentOrder = order);
   }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.management.RuntimeErrorException;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
@@ -41,17 +42,28 @@ public class SignatureService {
       body = "";
     }
     try {
+      LOG.debug("timestamp : " + timestamp);
+      LOG.debug("method : " + method.toUpperCase());
+      LOG.debug("requestPath : " + requestPath);
+      LOG.debug("body : " + body);
+
       String prehash = timestamp + method.toUpperCase() + requestPath + body;
       byte[] secretDecoded = Base64.getDecoder().decode(applicationProperties.getAuth().getApisecretkey());
       SecretKeySpec keyspec = new SecretKeySpec(secretDecoded, "HmacSHA256");
+
       Mac sha256 = Mac.getInstance("HmacSHA256");
       sha256.init(keyspec);
-      return Base64.getEncoder().encodeToString(sha256.doFinal(prehash.getBytes()));
+
+      return Base64.getEncoder().encodeToString(sha256.doFinal(prehash.getBytes("UTF-8")));
     } catch (InvalidKeyException e) {
       e.printStackTrace();
       throw new RuntimeErrorException(new Error("Cannot set up authentication headers."));
     }
     catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+      throw new RuntimeErrorException(new Error("Algorithme HmacSHA256 not implemented"));
+    }
+    catch (UnsupportedEncodingException e) {
       e.printStackTrace();
       throw new RuntimeErrorException(new Error("Algorithme HmacSHA256 not implemented"));
     }

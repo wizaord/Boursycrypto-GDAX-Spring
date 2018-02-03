@@ -3,6 +3,7 @@ package com.wizaord.boursycrypto.gdax.service;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
+import com.wizaord.boursycrypto.gdax.domain.api.PlaceOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,5 +62,34 @@ public class OrderService {
               .findFirst();
     }
     return Optional.empty();
+  }
+
+  public void cancelOrder(final String orderId) {
+    LOG.debug("Cancel order with ID {}", orderId);
+    restTemplate.delete("/orders/" + orderId);
+  }
+
+  public Optional<Order> placeStopSellOrder(final double priceP, final double nbCoin) {
+    LOG.info("Place a STOP ORDER TO {}", priceP);
+    final PlaceOrder placeOrder = PlaceOrder.builder()
+            .productId(this.applicationProperties.getProduct().getName())
+            .side("sell")
+//            .type("market")
+            .size("0.1")
+            .price("800")
+//            .stop("loss")
+//            .stopPrice(String.valueOf(priceP))
+            .build();
+
+    LOG.info("Positionnement d'un StopOrder a {} pour {}", priceP, nbCoin);
+//    SlackService._instance.postMessage('positionnement d un stopOrder a ' + priceP + ' pour ' + nbCoin + ' coins');
+
+    final ResponseEntity<Order> placeOrderResponse = restTemplate.postForEntity("/orders", placeOrder, Order.class);
+    if (placeOrderResponse.getStatusCode() != HttpStatus.OK) {
+      LOG.error("Unable to place the orders : {}", placeOrderResponse.toString());
+      return Optional.empty();
+    } else {
+      return Optional.of(placeOrderResponse.getBody());
+    }
   }
 }
