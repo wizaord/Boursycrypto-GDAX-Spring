@@ -2,6 +2,8 @@ package com.wizaord.boursycrypto.gdax.domain.feedmessage;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Value;
 
 import java.math.BigDecimal;
@@ -30,6 +32,8 @@ import java.util.Date;
  "last_size": "0.01000000"
  }
  */
+@Builder
+@AllArgsConstructor
 @Value
 public class Ticker extends GenericFeedMessage{
   private String sequence;

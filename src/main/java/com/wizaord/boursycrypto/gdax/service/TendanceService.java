@@ -23,8 +23,8 @@ public class TendanceService {
   @Autowired
   private ApplicationProperties applicationProperties;
 
-  private List<Ticker> tickerList = new ArrayList<>();
-  private LinkedList<HistorizedTic> historizedTics = new LinkedList<>();
+  List<Ticker> tickerList = new ArrayList<>();
+  LinkedList<HistorizedTic> historizedTics = new LinkedList<>();
 
   public void notifyTickerMessage(final Ticker tic) {
     this.tickerList.add(tic);
