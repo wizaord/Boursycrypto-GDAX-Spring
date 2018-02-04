@@ -1,0 +1,31 @@
+application:
+  auth:
+    apikey: AZERTYUIOP
+    apisecretkey: 1234567890
+    passphrase: AZERTYUIOP
+  product:
+    name: BTC-EUR
+    type: BTC
+  trader:
+    modeVisualisation: false
+    vente:
+      start:
+        cleanCurrentOrder: false
+      secureStopOrder:
+        activate: true
+        pourcent: 2
+      benefice:
+        pourcentBeforeStartVenteMode: 1.5
+        initialPourcent: 0.5
+        followingPourcent: 0.7
+    achat:
+      activate: true
+      maxBuyAmount: 5
+      pourcentageChuteCoursStopOrder: -2
+  historique:
+    logTendance: false
+    computeDelay: 60000
+    maxHistoriqueComputeKeepInMemory: 100
+  slack:
+    tokenId: PLIPPLOP
+    personalAccountChannel: PLOPPLOP

@@ -57,4 +57,14 @@ public class TendanceServiceTest {
     assertThat(historicTic.getAveragePrice()).isEqualTo(100);
   }
 
+  @Test
+  public void computeAndCleanHistoricList() {
+    for(int i = 0; i < 1000; i++) {
+      this.tendanceService.notifyTickerMessage(Ticker.builder().price(BigDecimal.valueOf(100)).side("buy").lastSize(BigDecimal.valueOf(1)).build());
+      this.tendanceService.computeTradeMessagesInHistoriqueCompute();
+    }
+
+    assertThat(this.tendanceService.historizedTics).hasSize(100);
+  }
+
 }
