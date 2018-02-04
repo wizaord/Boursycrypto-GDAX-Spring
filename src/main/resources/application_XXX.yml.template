@@ -7,6 +7,7 @@ application:
     name: LTC-EUR
     type: LTC
   trader:
+    delay: 5000
     modeVisualisation: true
     vente:
       start:

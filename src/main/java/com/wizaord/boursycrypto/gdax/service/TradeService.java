@@ -41,7 +41,7 @@ public class TradeService {
 
   public void notifyNewTickerMessage(final Ticker ticMessage) {
     this.lastCurrentPriceReceived = ticMessage.getPrice().doubleValue();
-    LOG.info("New Ticker value {}", this.lastCurrentPriceReceived);
+    LOG.debug("New Ticker value {}", this.lastCurrentPriceReceived);
   }
 
   /**
@@ -55,7 +55,7 @@ public class TradeService {
    * - si on est en bénéfice, on positionne le stopOrder juste pour gagner de l'argent
    * - et ensuite on fait monter ce stopOrder en fonction de la courbe
    */
-  @Scheduled(fixedRate = 5000)
+  @Scheduled(fixedRateString = "${application.trader.delay}")
   public synchronized void doTrading() {
     // si on a pas de cours, on ne fait rien. Sans prix, on ne peut rien faire
     if (this.lastCurrentPriceReceived == null) {

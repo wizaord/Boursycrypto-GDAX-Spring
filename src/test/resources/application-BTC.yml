@@ -7,6 +7,7 @@ application:
     name: BTC-EUR
     type: BTC
   trader:
+    delay: 5000
     modeVisualisation: false
     vente:
       start:
