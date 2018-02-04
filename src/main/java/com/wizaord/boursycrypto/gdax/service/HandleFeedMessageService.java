@@ -21,6 +21,8 @@ public class HandleFeedMessageService {
   private ObjectMapper jsonMapper;
   @Autowired
   private TradeService tradeService;
+  @Autowired
+  private TendanceService tendanceService;
 
   /**
    * Cette fonction permet à partir d'un object JSON, de recupérer l'ordre recu par GDAX
@@ -51,6 +53,7 @@ public class HandleFeedMessageService {
   }
 
   protected void handleTickerMessage(final Ticker tickerMessage) {
+    tendanceService.notifyTickerMessage(tickerMessage);
     tradeService.notifyNewTickerMessage(tickerMessage);
   }
 }

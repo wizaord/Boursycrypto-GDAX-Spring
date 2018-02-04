@@ -52,7 +52,7 @@ public class Ticker extends GenericFeedMessage{
   private Date time;
   @JsonProperty("trade_id")
   private String tradeId;
-  @JsonProperty("lasy_size")
+  @JsonProperty("last_size")
   private BigDecimal lastSize;
 }
 
