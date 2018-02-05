@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 @Builder
 @Data
-
 public class HistorizedTic {
   private LocalDateTime generatedDate;
   private long nbTic;

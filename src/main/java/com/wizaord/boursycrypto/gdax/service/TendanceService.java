@@ -2,6 +2,7 @@ package com.wizaord.boursycrypto.gdax.service;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.HistorizedTic;
+import com.wizaord.boursycrypto.gdax.domain.Tendance;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,21 +11,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Service
 public class TendanceService {
   private static final Logger LOG = LoggerFactory.getLogger(TendanceService.class);
-
-  @Autowired
-  private ApplicationProperties applicationProperties;
-
   List<Ticker> tickerList = new ArrayList<>();
   LinkedList<HistorizedTic> historizedTics = new LinkedList<>();
+  @Autowired
+  private ApplicationProperties applicationProperties;
 
   public void notifyTickerMessage(final Ticker tic) {
     this.tickerList.add(tic);
@@ -52,7 +51,7 @@ public class TendanceService {
         return;
       }
       historicTic = this.historizedTics.getLast();
-      historicTic.setGeneratedDate(LocalDateTime.now().truncatedTo(SECONDS));
+      historicTic.setGeneratedDate(LocalDateTime.now().truncatedTo(MINUTES));
       historicTic.setNbSell(0);
       historicTic.setNbBuy(0);
       historicTic.setNbTic(0);
@@ -95,4 +94,84 @@ public class TendanceService {
     }
   }
 
+
+  /**
+   * Le calcul d'une tendance est simple.
+   * On prend la date de Debut, on prend la date de fin et on compare
+   *
+   * @param {Date} beginDate
+   * @param {Date} endDate
+   *
+   * @returns {number}
+   */
+  Optional<Tendance> calculeTendance(final LocalDateTime beginDate, LocalDateTime endDate) {
+    if (endDate == null) {
+      endDate = LocalDateTime.now();
+    }
+
+    if (this.historizedTics.isEmpty()) {
+      return Optional.empty();
+    }
+
+    final LocalDateTime firstListDate = this.historizedTics.peekFirst().getGeneratedDate();
+    final LocalDateTime beginDateSec = beginDate.truncatedTo(MINUTES);
+    final LocalDateTime endDateSec = endDate.truncatedTo(MINUTES);
+
+    // si la date de debut n'existe pas, on ne remonte pas de tendance
+    // console.log('First date ' + firstListDate.getTime());
+    // console.log('Begin Date ' + beginDateSec.getTime());
+    // console.log('End date ' + endDateSec.getTime());
+    if (firstListDate.isAfter(beginDateSec)) {
+      return null;
+    }
+
+    final LinkedList<HistorizedTic> historiqueTicsInInterval = new LinkedList<>(this.getHistoriqueTics(beginDateSec, endDateSec));
+    if (historiqueTicsInInterval.size() == 0) {
+      LOG.info("Unable to get computeHisto between beginDate {} and endDate {}", beginDateSec, endDateSec);
+      return null;
+    }
+
+    final HistorizedTic oldElement = historiqueTicsInInterval.peekFirst();
+    final HistorizedTic lastElement = historiqueTicsInInterval.peekLast();
+
+
+
+    final Tendance tendance = Tendance.builder()
+            .beginDate(oldElement.getGeneratedDate())
+            .endDate(lastElement.getGeneratedDate())
+            .evolPrice(lastElement.getAveragePrice() - oldElement.getAveragePrice())
+            .evolPourcentage((lastElement.getAveragePrice() - oldElement.getAveragePrice()) / oldElement.getAveragePrice()* 100)  //  (Valeur d’arrivée – Valeur de départ) / Valeur de départ x 100
+            .type("")
+            .volumeEchangee(0)
+            .averagePrice(0)
+            .build();
+
+    // set average price
+    tendance.setAveragePrice(historiqueTicsInInterval.stream()
+            .map(ht -> ht.getAveragePrice())
+            .reduce((previous, current) -> previous + current).orElse(0D) / historiqueTicsInInterval.size());
+
+    // set type
+    tendance.setType((tendance.getEvolPrice() >= 0) ? "HAUSSE" : "BAISSE");
+
+    // set volument echange
+    tendance.setVolumeEchangee(historiqueTicsInInterval.stream().mapToDouble(x -> x.getVolumeEchange()).sum());
+    return Optional.of(tendance);
+  }
+
+  /**
+   * Retourne la liste des historiques entre la date de debut et la date de fin
+   *
+   * @param {Date} beginDate
+   * @param {Date} endDate
+   *
+   * @returns {HistoriqueCompute[]}
+   */
+  List<HistorizedTic> getHistoriqueTics(final LocalDateTime beginDate, final LocalDateTime endDate) {
+    return this.historizedTics.stream()
+            .filter(historizedTic -> historizedTic.getGeneratedDate().isAfter(beginDate) && historizedTic.getGeneratedDate()
+                    .isBefore(endDate))
+            .sorted(Comparator.comparing(HistorizedTic::getGeneratedDate))
+            .collect(Collectors.toList());
+  }
 }
