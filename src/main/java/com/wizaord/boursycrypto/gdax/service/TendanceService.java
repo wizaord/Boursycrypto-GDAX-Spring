@@ -1,9 +1,9 @@
 package com.wizaord.boursycrypto.gdax.service;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.domain.HistorizedTic;
-import com.wizaord.boursycrypto.gdax.domain.Tendance;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
+import com.wizaord.boursycrypto.gdax.domain.historic.HistorizedTic;
+import com.wizaord.boursycrypto.gdax.domain.historic.Tendance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

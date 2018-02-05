@@ -1,4 +1,4 @@
-package com.wizaord.boursycrypto.gdax.domain;
+package com.wizaord.boursycrypto.gdax.domain.historic;
 
 import lombok.Builder;
 import lombok.Data;

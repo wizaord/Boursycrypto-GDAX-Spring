@@ -1,9 +1,9 @@
 package com.wizaord.boursycrypto.gdax.service;
 
 import com.wizaord.boursycrypto.gdax.ConfigurationMain;
-import com.wizaord.boursycrypto.gdax.domain.HistorizedTic;
-import com.wizaord.boursycrypto.gdax.domain.Tendance;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
+import com.wizaord.boursycrypto.gdax.domain.historic.HistorizedTic;
+import com.wizaord.boursycrypto.gdax.domain.historic.Tendance;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
