@@ -6,6 +6,7 @@ import com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
+import com.wizaord.boursycrypto.gdax.domain.historic.Tendance;
 import com.wizaord.boursycrypto.gdax.utils.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.ACHAT;
@@ -32,12 +35,15 @@ public class TradeService {
   private OrderService orderService;
   @Autowired
   private ApplicationProperties appProp;
+  @Autowired
+  private TendanceService tendanceService;
 
   private Double lastCurrentPriceReceived;
   private double currentPrice;
   private E_TradingMode traderMode = E_TradingMode.NOORDER;
   private Order lastBuyOrder;
   private Order stopOrderCurrentOrder;
+  private LocalDateTime lastNotifyBuyMessage = LocalDateTime.of(2010, 1, 1, 1, 1);
 
   public void notifyNewTickerMessage(final Ticker ticMessage) {
     this.lastCurrentPriceReceived = ticMessage.getPrice().doubleValue();
@@ -72,8 +78,8 @@ public class TradeService {
         this.determineTradeMode();
         break;
       case ACHAT:
-        LOG.info("MODE ACHAT - cours {]", this.currentPrice);
-        //        this.doTradingBuy();
+        LOG.info("MODE ACHAT - cours {}", this.currentPrice);
+        this.doTradingBuyCheck();
         break;
       case VENTE:
         this.logVenteEvolution();
@@ -82,6 +88,69 @@ public class TradeService {
           this.doTradingSell();
         }
         break;
+    }
+  }
+
+
+  private void tendanceAchatLog(final List<Tendance> tendances) {
+    tendances.forEach(tendance -> {
+      LOG.info("TENDANCE - Date {} average: {} prix: {} %: {}",
+              tendance.getBeginDate().getHour() + ":" + tendance.getBeginDate().getMinute(),
+              df.format(tendance.getAveragePrice()),
+              df.format(tendance.getEvolPrice()),
+              df.format(tendance.getEvolPourcentage()));
+    });
+  }
+
+  /**
+   * Fonction qui permet de déterminer le moment où il faut acheter
+   */
+  private void doTradingBuyCheck() {
+    // on regarde les tendances sur les dernières minutes,
+    // Si elles sont toutes baissière et que la dernière est une grosse chute > 2% (sur la minutes)
+    // on positionne un stopOrder d'achat
+    // et on suit la courbe baissière
+    final List<Tendance> lastEveryMinutesTendances = this.tendanceService.getLastEveryMinutesTendances(15);
+    LOG.debug("Retrieve {} tendances", lastEveryMinutesTendances.size());
+    this.tendanceAchatLog(lastEveryMinutesTendances);
+
+    boolean lookingForBuy = false;
+    double cumulEvolutionNegative = 0;
+
+    while (lastEveryMinutesTendances.size() != 0 && !lookingForBuy) {
+      final Tendance tendance = lastEveryMinutesTendances.remove(0);
+      if (tendance.getEvolPourcentage() < 0.3) {
+        // on cumule l'evolution
+        cumulEvolutionNegative += tendance.getEvolPourcentage();
+      } else {
+        // on arrete tout
+        break;
+      }
+
+      // si l'evolution est negative à XX pourcent on remonte une alerte
+      if (cumulEvolutionNegative <= this.appProp.getTrader().getAchat().getPourcentageChuteCoursStopOrder()) {
+        lookingForBuy = true;
+      }
+    }
+
+    if (lookingForBuy) {
+      doTradingBuy(cumulEvolutionNegative);
+    }
+  }
+
+  /**
+   * Cette fonction est appelée quand une grosse chute est détectée
+   */
+  private void doTradingBuy(final double cumulEvolutionNegative) {
+
+    // envoie d'un message de notification
+    // uniquement si l'ancien message date d'il y a lontemps
+    LocalDateTime currentDate = LocalDateTime.now().minusMinutes(10);
+    if (currentDate.isAfter(this.lastNotifyBuyMessage)) {
+      this.lastNotifyBuyMessage = LocalDateTime.now();
+      final String message = "CHECK FOR ACHAT - Baisse du cours de " + df.format(cumulEvolutionNegative) + " a " + df
+              .format(this.currentPrice);
+//      SlackService._instance.postMessage(message);
     }
   }
 

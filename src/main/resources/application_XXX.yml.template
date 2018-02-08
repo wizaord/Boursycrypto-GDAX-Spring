@@ -29,4 +29,4 @@ application:
     maxHistoriqueComputeKeepInMemory: 100
   slack:
     tokenId: xoxp-XXXXX
-    personalAccountChannel: U47L9GF43
+    personalAccountChannel: PLOPPLOP

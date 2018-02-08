@@ -100,7 +100,7 @@ public class OrderService {
   }
 
   public Optional<Order> placeStopSellOrder(final double priceP, final double nbCoin) {
-    LOG.info("Place a STOP ORDER TO {}", priceP);
+    LOG.debug("Place a STOP ORDER TO {}", priceP);
     final PlaceOrder placeOrder = PlaceOrder.builder()
             .productId(this.applicationProperties.getProduct().getName())
             .size(String.valueOf(nbCoin))

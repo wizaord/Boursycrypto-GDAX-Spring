@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Service
 public class TendanceService {
@@ -34,7 +33,7 @@ public class TendanceService {
 
     LOG.debug("Launching compute Tics message in HistoricTic");
     HistorizedTic historicTic = HistorizedTic.builder()
-            .generatedDate(LocalDateTime.now().truncatedTo(SECONDS))
+            .generatedDate(LocalDateTime.now().truncatedTo(MINUTES))
             .nbTic(0)
             .averagePrice(0)
             .volumeEchange(0)
@@ -122,25 +121,24 @@ public class TendanceService {
     // console.log('Begin Date ' + beginDateSec.getTime());
     // console.log('End date ' + endDateSec.getTime());
     if (firstListDate.isAfter(beginDateSec)) {
-      return null;
+      return Optional.empty();
     }
 
     final LinkedList<HistorizedTic> historiqueTicsInInterval = new LinkedList<>(this.getHistoriqueTics(beginDateSec, endDateSec));
     if (historiqueTicsInInterval.size() == 0) {
       LOG.info("Unable to get computeHisto between beginDate {} and endDate {}", beginDateSec, endDateSec);
-      return null;
+      return Optional.empty();
     }
 
     final HistorizedTic oldElement = historiqueTicsInInterval.peekFirst();
     final HistorizedTic lastElement = historiqueTicsInInterval.peekLast();
 
 
-
     final Tendance tendance = Tendance.builder()
             .beginDate(oldElement.getGeneratedDate())
             .endDate(lastElement.getGeneratedDate())
             .evolPrice(lastElement.getAveragePrice() - oldElement.getAveragePrice())
-            .evolPourcentage((lastElement.getAveragePrice() - oldElement.getAveragePrice()) / oldElement.getAveragePrice()* 100)  //  (Valeur d’arrivée – Valeur de départ) / Valeur de départ x 100
+            .evolPourcentage(0)
             .type("")
             .volumeEchangee(0)
             .averagePrice(0)
@@ -148,14 +146,17 @@ public class TendanceService {
 
     // set average price
     tendance.setAveragePrice(historiqueTicsInInterval.stream()
-            .map(ht -> ht.getAveragePrice())
+            .map(HistorizedTic::getAveragePrice)
             .reduce((previous, current) -> previous + current).orElse(0D) / historiqueTicsInInterval.size());
 
     // set type
     tendance.setType((tendance.getEvolPrice() >= 0) ? "HAUSSE" : "BAISSE");
 
+    //  (Valeur d’arrivée – Valeur de départ) / Valeur de départ x 100);
+    tendance.setEvolPourcentage(((lastElement.getAveragePrice() - oldElement.getAveragePrice()) / oldElement.getAveragePrice()) * 100);
+
     // set volument echange
-    tendance.setVolumeEchangee(historiqueTicsInInterval.stream().mapToDouble(x -> x.getVolumeEchange()).sum());
+    tendance.setVolumeEchangee(historiqueTicsInInterval.stream().mapToDouble(HistorizedTic::getVolumeEchange).sum());
     return Optional.of(tendance);
   }
 
@@ -169,9 +170,31 @@ public class TendanceService {
    */
   List<HistorizedTic> getHistoriqueTics(final LocalDateTime beginDate, final LocalDateTime endDate) {
     return this.historizedTics.stream()
-            .filter(historizedTic -> historizedTic.getGeneratedDate().isAfter(beginDate) && historizedTic.getGeneratedDate()
-                    .isBefore(endDate))
+            .filter(historizedTic ->
+             ((historizedTic.getGeneratedDate().isEqual(beginDate) || historizedTic.getGeneratedDate().isAfter(beginDate))
+                && (historizedTic.getGeneratedDate().isEqual(endDate) || historizedTic.getGeneratedDate().isBefore(endDate)))
+            )
             .sorted(Comparator.comparing(HistorizedTic::getGeneratedDate))
             .collect(Collectors.toList());
+  }
+
+  public List<Tendance> getLastEveryMinutesTendances(final int nbTendance) {
+    final List<Tendance> tendances = new ArrayList<>(nbTendance);
+
+    if (this.historizedTics.isEmpty()) {
+      LOG.debug("No historicTic for the moment. Please wait");
+      return tendances;
+    }
+
+    final LocalDateTime lastDate = this.historizedTics.peekLast().getGeneratedDate();
+    for (int i = 0 ; i < this.historizedTics.size(); i++) {
+      final LocalDateTime endDate = lastDate.minusMinutes(i);
+      final LocalDateTime beginDate = lastDate.minusMinutes((i + 1));
+      final Optional<Tendance> calculatedTendance = this.calculeTendance(beginDate, endDate);
+      if(calculatedTendance.isPresent()) {
+        tendances.add(calculatedTendance.get());
+      }
+    }
+    return tendances;
   }
 }

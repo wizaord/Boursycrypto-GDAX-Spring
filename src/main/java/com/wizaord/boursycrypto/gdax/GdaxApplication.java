@@ -10,9 +10,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import javax.websocket.DeploymentException;
-import java.io.IOException;
-
 @SpringBootApplication //@EnableAutoConfiguration , @ComponentScan, SpringBootConfiguration
 @EnableConfigurationProperties(ApplicationProperties.class)
 @EnableScheduling
@@ -25,7 +22,7 @@ public class GdaxApplication {
     this.env = env;
   }
 
-  public static void main(String[] args) throws IOException, DeploymentException {
+  public static void main(String[] args) {
     SpringApplication app = new SpringApplication(GdaxApplication.class);
     ConfigurableApplicationContext context = app.run(args);
 
