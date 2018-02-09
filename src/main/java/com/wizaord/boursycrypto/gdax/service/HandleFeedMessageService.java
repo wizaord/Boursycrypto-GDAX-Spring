@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wizaord.boursycrypto.gdax.domain.E_FeedMessage;
 import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
+import com.wizaord.boursycrypto.gdax.service.trade.TradeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

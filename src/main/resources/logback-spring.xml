@@ -3,7 +3,7 @@
 <configuration scan="true">
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <logger name="com.wizaord" level="info"/>
+    <logger name="com.wizaord" level="debug"/>
     <logger name="com.wizaord.boursycrypto.gdax.listener" level="INFO"/>
 
     <logger name="org.springframework" level="WARN"/>

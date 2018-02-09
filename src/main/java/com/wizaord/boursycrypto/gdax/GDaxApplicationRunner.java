@@ -4,6 +4,7 @@ import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.listener.FeedListener;
 import com.wizaord.boursycrypto.gdax.service.AccountService;
 import com.wizaord.boursycrypto.gdax.service.OrderService;
+import com.wizaord.boursycrypto.gdax.service.SlackService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ public class GDaxApplicationRunner implements ApplicationRunner {
   private static final Logger LOG = LoggerFactory.getLogger(GDaxApplicationRunner.class);
 
   @Autowired
+  private SlackService slackService;
+  @Autowired
   private AccountService accountService;
   @Autowired
   private ApplicationProperties applicationProperties;
@@ -39,6 +42,7 @@ public class GDaxApplicationRunner implements ApplicationRunner {
   @Override
   public void run(final ApplicationArguments args) {
     LOG.info("Starting GDaxApplication Runner !!!!");
+    slackService.postCustomMessage("Starting GDaxApplication for " + this.applicationProperties.getProduct().getName());
     if (applicationProperties.getTrader().getVente().getStart().getCleanCurrentOrder()) {
       removeLastCurrentOrder();
     }
