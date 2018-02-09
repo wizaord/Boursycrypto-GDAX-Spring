@@ -1,4 +1,4 @@
-package com.wizaord.boursycrypto.gdax.service;
+package com.wizaord.boursycrypto.gdax.service.notify;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import org.slf4j.Logger;
@@ -29,8 +29,25 @@ public class SlackService {
    * @param message
    */
   public void postCustomMessage(final String message) {
+    this.sendMessage(message, this.appProp.getSlack().getPersonalAccountChannel());
+  }
+
+  /**
+   * Send a message to the complete list of users
+   * @param message
+   */
+  public void postListChannel(final String message) {
+      this.appProp.getSlack().getListChannel().forEach(x -> this.sendMessage(message, x));
+  }
+
+  /**
+   * Send a message to a specific channel
+   * @param message
+   * @param channel
+   */
+  public void sendMessage(final String message, final String channel) {
     LOG.debug("Sending message to slack : {}", message);
-    this.sendSlackMessage("chat.postMessage", this.appProp.getSlack().getPersonalAccountChannel(), message);
+    this.sendSlackMessage(SLACK_ACTION, channel , message);
   }
 
   private void sendSlackMessage(final String uri, final String channel, final String message) {

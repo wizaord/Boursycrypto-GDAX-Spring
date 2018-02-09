@@ -4,6 +4,7 @@ import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
 import com.wizaord.boursycrypto.gdax.domain.api.PlaceOrder;
+import com.wizaord.boursycrypto.gdax.service.notify.SlackService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

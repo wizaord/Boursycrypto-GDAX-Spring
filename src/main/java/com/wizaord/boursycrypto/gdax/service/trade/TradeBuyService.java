@@ -2,8 +2,8 @@ package com.wizaord.boursycrypto.gdax.service.trade;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.historic.Tendance;
-import com.wizaord.boursycrypto.gdax.service.SlackService;
 import com.wizaord.boursycrypto.gdax.service.TendanceService;
+import com.wizaord.boursycrypto.gdax.service.notify.SlackService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,19 +76,21 @@ public class TradeBuyService {
     LocalDateTime currentDate = LocalDateTime.now().minusMinutes(10);
     if (currentDate.isAfter(this.lastNotifyBuyMessage)) {
       this.lastNotifyBuyMessage = LocalDateTime.now();
-      final String message = "CHECK FOR ACHAT - Baisse du cours de " + df.format(cumulEvolutionNegative);
-      slackService.postCustomMessage(message);
+      final String message = "CHECK FOR ACHAT - Baisse du cours : " + this.applicationProperties.getProduct().getName() + " de " + df.format(cumulEvolutionNegative);
+      slackService.postListChannel(message);
     }
   }
 
   private void tendanceAchatLog(final List<Tendance> tendances) {
-    LOG.info("================ TENDANCE ===================");
-    tendances.forEach(tendance -> {
-      LOG.info("Date {} average: {} prix: {} %: {}",
-              tendance.getBeginDate().getHour() + ":" + tendance.getBeginDate().getMinute(),
-              df.format(tendance.getAveragePrice()),
-              df.format(tendance.getEvolPrice()),
-              df.format(tendance.getEvolPourcentage()));
-    });
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("================ TENDANCE ===================");
+      tendances.forEach(tendance -> {
+        LOG.debug("Date {} average: {} prix: {} %: {}",
+                tendance.getBeginDate().getHour() + ":" + tendance.getBeginDate().getMinute(),
+                df.format(tendance.getAveragePrice()),
+                df.format(tendance.getEvolPrice()),
+                df.format(tendance.getEvolPourcentage()));
+      });
+    }
   }
 }

@@ -8,7 +8,7 @@ import com.wizaord.boursycrypto.gdax.domain.api.Order;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
 import com.wizaord.boursycrypto.gdax.service.AccountService;
 import com.wizaord.boursycrypto.gdax.service.OrderService;
-import com.wizaord.boursycrypto.gdax.service.SlackService;
+import com.wizaord.boursycrypto.gdax.service.notify.SlackService;
 import com.wizaord.boursycrypto.gdax.utils.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

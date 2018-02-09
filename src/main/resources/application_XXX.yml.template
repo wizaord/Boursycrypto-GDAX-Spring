@@ -29,4 +29,7 @@ application:
     maxHistoriqueComputeKeepInMemory: 100
   slack:
     tokenId: xoxp-XXXXX
-    personalAccountChannel: PLOPPLOP
+    personalAccountChannel: PLOP
+    listChannel:
+      - AZERTYU
+      - SDFGHJKL

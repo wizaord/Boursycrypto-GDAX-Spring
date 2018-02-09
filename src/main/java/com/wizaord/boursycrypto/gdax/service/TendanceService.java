@@ -186,8 +186,9 @@ public class TendanceService {
       return tendances;
     }
 
+    final int maxTendance = (this.historizedTics.size() < nbTendance) ? this.historizedTics.size() : nbTendance;
     final LocalDateTime lastDate = this.historizedTics.peekLast().getGeneratedDate();
-    for (int i = 0 ; i < this.historizedTics.size(); i++) {
+    for (int i = 0 ; i < maxTendance; i++) {
       final LocalDateTime endDate = lastDate.minusMinutes(i);
       final LocalDateTime beginDate = lastDate.minusMinutes((i + 1));
       final Optional<Tendance> calculatedTendance = this.calculeTendance(beginDate, endDate);
