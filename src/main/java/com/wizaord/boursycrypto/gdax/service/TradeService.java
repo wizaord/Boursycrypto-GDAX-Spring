@@ -30,6 +30,8 @@ public class TradeService {
   private static final Logger LOG = LoggerFactory.getLogger(TradeService.class);
 
   @Autowired
+  private SlackService slackService;
+  @Autowired
   private AccountService accountService;
   @Autowired
   private OrderService orderService;
@@ -93,8 +95,9 @@ public class TradeService {
 
 
   private void tendanceAchatLog(final List<Tendance> tendances) {
+    LOG.info("================ TENDANCE ===================");
     tendances.forEach(tendance -> {
-      LOG.info("TENDANCE - Date {} average: {} prix: {} %: {}",
+      LOG.info("Date {} average: {} prix: {} %: {}",
               tendance.getBeginDate().getHour() + ":" + tendance.getBeginDate().getMinute(),
               df.format(tendance.getAveragePrice()),
               df.format(tendance.getEvolPrice()),
@@ -150,7 +153,7 @@ public class TradeService {
       this.lastNotifyBuyMessage = LocalDateTime.now();
       final String message = "CHECK FOR ACHAT - Baisse du cours de " + df.format(cumulEvolutionNegative) + " a " + df
               .format(this.currentPrice);
-//      SlackService._instance.postMessage(message);
+      slackService.postCustomMessage(message);
     }
   }
 
@@ -206,7 +209,7 @@ public class TradeService {
 
   public void notifyNewOrder(final Order order) {
     LOG.info("NEW ORDER - Receive order {}", order);
-    //    SlackService._instance.postMessage('NEW ORDER - Handle order ' + JSON.stringify(order));
+    slackService.postCustomMessage("NEW ORDER - Handle order " + order);
     this.accountService.refreshBalance();
     this.lastBuyOrder = order;
     this.traderMode = VENTE;

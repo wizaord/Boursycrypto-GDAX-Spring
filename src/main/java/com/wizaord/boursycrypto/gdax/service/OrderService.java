@@ -4,7 +4,6 @@ import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
 import com.wizaord.boursycrypto.gdax.domain.api.PlaceOrder;
-import com.wizaord.boursycrypto.gdax.utils.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +17,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.wizaord.boursycrypto.gdax.utils.MathUtils.df;
+
 @Service
 public class OrderService {
   private static final Logger LOG = LoggerFactory.getLogger(OrderService.class);
@@ -26,6 +27,8 @@ public class OrderService {
   private RestTemplate restTemplate;
   @Autowired
   private ApplicationProperties applicationProperties;
+  @Autowired
+  private SlackService slackService;
 
   public Optional<List<Order>> loadOrders() {
     LOG.debug("Retrieving orders..");
@@ -67,9 +70,9 @@ public class OrderService {
   }
 
   public void cancelOrders() {
-      this.loadOrders().orElse(Arrays.asList())
-              .stream()
-              .forEach(order -> this.cancelOrder(order.getId()));
+    this.loadOrders().orElse(Arrays.asList())
+            .stream()
+            .forEach(order -> this.cancelOrder(order.getId()));
   }
 
   public void cancelOrder(final String orderId) {
@@ -84,11 +87,11 @@ public class OrderService {
             .side("sell")
             .type("limit")
             .size(String.valueOf(nbCoin))
-            .price(MathUtils.df.format(price))
+            .price(df.format(price))
             .build();
 
-    LOG.info("Positionnement d'un Limit Order en vente a {} pour {}", MathUtils.df.format(price), nbCoin);
-    //    SlackService._instance.postMessage('positionnement d un stopOrder a ' + priceP + ' pour ' + nbCoin + ' coins');
+    LOG.info("Positionnement d'un Limit Order en vente a {} pour {}", df.format(price), nbCoin);
+    slackService.postCustomMessage("positionnement d un LIMIT SELL ORDER a " + df.format(price) + " pour " + nbCoin + " coins");
 
     final ResponseEntity<Order> placeOrderResponse = restTemplate.postForEntity("/orders", placeOrder, Order.class);
     if (placeOrderResponse.getStatusCode() != HttpStatus.OK) {
@@ -112,7 +115,7 @@ public class OrderService {
             .build();
 
     LOG.info("Positionnement d'un StopOrder a {} pour {}", priceP, nbCoin);
-//    SlackService._instance.postMessage('positionnement d un stopOrder a ' + priceP + ' pour ' + nbCoin + ' coins');
+    slackService.postCustomMessage("positionnement d un STOP SELL ORDER a " + df.format(priceP) + " pour " + nbCoin + " coins");
 
     final ResponseEntity<Order> placeOrderResponse = restTemplate.postForEntity("/orders", placeOrder, Order.class);
     if (placeOrderResponse.getStatusCode() != HttpStatus.OK) {
