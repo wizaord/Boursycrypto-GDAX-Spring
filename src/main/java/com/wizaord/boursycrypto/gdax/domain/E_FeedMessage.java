@@ -7,7 +7,11 @@ import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
 import java.util.Optional;
 
 public enum E_FeedMessage {
-  TICKER("ticker", Ticker.class);
+  TICKER("ticker", Ticker.class),
+  OPEN("open", GenericFeedMessage.class),
+  DONE("done", GenericFeedMessage.class),
+  SUBSCRIPTION("subscriptions", GenericFeedMessage.class),
+  RECEIVED("received", GenericFeedMessage.class);
 
   /**
    * The value of the type parameter in the feed message

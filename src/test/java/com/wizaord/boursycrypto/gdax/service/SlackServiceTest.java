@@ -1,6 +1,7 @@
 package com.wizaord.boursycrypto.gdax.service;
 
 import com.wizaord.boursycrypto.gdax.ConfigurationMain;
+import com.wizaord.boursycrypto.gdax.service.notify.SlackService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

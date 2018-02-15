@@ -38,6 +38,8 @@ public class HandleFeedMessageService {
       if(feedMessageType.isPresent()) {
         final GenericFeedMessage mapperMessage = jsonMapper.readValue(message, feedMessageType.get().javaType);
         this.handleGdaxAction(mapperMessage);
+      } else {
+        LOG.warn("Unknow message type => " + message);
       }
     }
     catch (IOException e) {

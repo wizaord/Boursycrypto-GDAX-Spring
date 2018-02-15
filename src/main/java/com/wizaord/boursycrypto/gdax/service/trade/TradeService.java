@@ -127,7 +127,7 @@ public class TradeService {
     final boolean isStopOrderPlaced = (this.stopOrderCurrentOrder != null);
 
     if (isStopOrderPlaced) {
-      final double stopOrderPrice = this.stopOrderCurrentOrder.getPrice().doubleValue();
+      final double stopOrderPrice = this.stopOrderCurrentOrder.getStop_price().doubleValue();
       if (stopOrderPrice > lastOrderPrice) {
         // on est dans le cas où on a déjà été en BENEFICE. On y reste
         return BENEFICE;
@@ -256,7 +256,7 @@ public class TradeService {
       this.orderService.cancelOrder(this.stopOrderCurrentOrder.getId());
       this.stopOrderCurrentOrder = null;
     }
-    this.orderService.placeStopSellOrder(10, this.accountService.getBtc())
+    this.orderService.placeStopSellOrder(price, this.accountService.getBtc())
             .ifPresent(order -> this.stopOrderCurrentOrder = order);
   }
 }

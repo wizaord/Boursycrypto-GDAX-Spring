@@ -17,7 +17,6 @@ public class WebSocketConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(WebSocketConfiguration.class);
 
   public static final String GDAX_WEBSOCKET = "wss://ws-feed.gdax.com";
-  //  private final String GDAX_WEBSOCKET = "wss://demos.kaazing.com/echo";
 
   @PostConstruct
   public void log() {

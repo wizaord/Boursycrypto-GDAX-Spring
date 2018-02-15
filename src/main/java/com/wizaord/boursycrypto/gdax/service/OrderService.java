@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -82,6 +84,8 @@ public class OrderService {
   }
 
   public Optional<Order> placeLimitSellOrder(final double price, final double nbCoin) {
+    NumberFormat nf = new DecimalFormat("#.##");
+    final String stringPlacePrice = nf.format(price).replace(",", ".");
     LOG.info("Place a SELL LIMIT ORDER TO {}", price);
     final PlaceOrder placeOrder = PlaceOrder.builder()
             .productId(this.applicationProperties.getProduct().getName())
@@ -104,19 +108,21 @@ public class OrderService {
   }
 
   public Optional<Order> placeStopSellOrder(final double priceP, final double nbCoin) {
-    LOG.debug("Place a STOP ORDER TO {}", priceP);
+    NumberFormat nf = new DecimalFormat("#.##");
+    final String stringPlacePrice = nf.format(priceP).replace(",", ".");
+    LOG.debug("Place a STOP ORDER TO {}", stringPlacePrice);
     final PlaceOrder placeOrder = PlaceOrder.builder()
             .productId(this.applicationProperties.getProduct().getName())
             .size(String.valueOf(nbCoin))
-            .price(String.valueOf(priceP))
+            .price(stringPlacePrice)
             .side("sell")
             .type("market")
             .stop("loss")
-            .stopPrice(String.valueOf(priceP))
+            .stopPrice(stringPlacePrice)
             .build();
 
-    LOG.info("Positionnement d'un StopOrder a {} pour {}", priceP, nbCoin);
-    slackService.postCustomMessage("positionnement d un STOP SELL ORDER a " + df.format(priceP) + " pour " + nbCoin + " coins");
+    LOG.info("Positionnement d'un StopOrder a {} pour {}", stringPlacePrice, nbCoin);
+    slackService.postCustomMessage("positionnement d un STOP SELL ORDER a " + stringPlacePrice + " pour " + nbCoin + " coins");
 
     final ResponseEntity<Order> placeOrderResponse = restTemplate.postForEntity("/orders", placeOrder, Order.class);
     if (placeOrderResponse.getStatusCode() != HttpStatus.OK) {
