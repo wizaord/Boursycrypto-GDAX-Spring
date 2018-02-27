@@ -7,9 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
 import javax.websocket.ContainerProvider;
-import javax.websocket.DeploymentException;
 import javax.websocket.WebSocketContainer;
-import java.io.IOException;
 
 @Configuration
 public class WebSocketConfiguration {
@@ -24,9 +22,10 @@ public class WebSocketConfiguration {
   }
 
   @Bean
-  public WebSocketContainer getWebSocketContainer() throws IOException, DeploymentException {
+  public WebSocketContainer getWebSocketContainer() {
       WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-      container.setDefaultMaxTextMessageBufferSize(999999);
+      container.setDefaultMaxTextMessageBufferSize(9999999);
+      container.setDefaultMaxSessionIdleTimeout(0);
       return container;
   }
 

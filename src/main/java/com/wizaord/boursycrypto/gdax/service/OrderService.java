@@ -122,7 +122,6 @@ public class OrderService {
             .build();
 
     LOG.info("Positionnement d'un StopOrder a {} pour {}", stringPlacePrice, nbCoin);
-    slackService.postCustomMessage("positionnement d un STOP SELL ORDER a " + stringPlacePrice + " pour " + nbCoin + " coins");
 
     final ResponseEntity<Order> placeOrderResponse = restTemplate.postForEntity("/orders", placeOrder, Order.class);
     if (placeOrderResponse.getStatusCode() != HttpStatus.OK) {

@@ -60,7 +60,6 @@ public class FeedListener {
     public void onOpen(Session session) throws IOException {
         LOG.info("Sending subscribe request to the webSocket");
 
-
         final SubscribeRequest subscriberequest = SubscribeRequest.builder()
                 .type("subscribe")
                 .product_id(applicationProperties.getProduct().getName())
@@ -92,7 +91,8 @@ public class FeedListener {
 
     @OnClose
     public void processClose(Session session, CloseReason reason) throws IOException {
-        LOG.error("WebSocket has been close with reason " + reason.toString());
+        LOG.debug("WebSocket has been close with reason " + reason.toString());
+        this.session = null;
         this.startConnection();
     }
 
