@@ -63,20 +63,21 @@ public class FeedListener {
         final SubscribeRequest subscriberequest = SubscribeRequest.builder()
                 .type("subscribe")
                 .product_id(applicationProperties.getProduct().getName())
-//            .channel("full")
+//            .channel("level2")
+//                .channel("heartbeat")
                 .channel("ticker")
                 .channel("user")
                 .build();
 
         final String subscribeJson = jsonMapper.writeValueAsString(subscriberequest);
+        LOG.debug("Sig content {}", subscribeJson);
 
-        final SignatureHeader signature = signatureService.getSignature("", "GET", subscribeJson);
+        final SignatureHeader signature = signatureService.getSignature("/users/self/verify", "GET", null);
 
-        //add auth data
-        subscriberequest.setTimestamp(signature.getCbAccessTimestamp());
         subscriberequest.setKey(signature.getCbAccessKey());
-        subscriberequest.setPassphrase(signature.getCbAccessPassphrase());
         subscriberequest.setSignature(signature.getCbAccessSign());
+        subscriberequest.setTimestamp(signature.getCbAccessTimestamp());
+        subscriberequest.setPassphrase(signature.getCbAccessPassphrase());
 
         final String subscribeMsg = jsonMapper.writeValueAsString(subscriberequest);
         LOG.debug("Sending subscribe request : {}", subscribeMsg);

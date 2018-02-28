@@ -1,9 +1,7 @@
 package com.wizaord.boursycrypto.gdax.service.trade;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.domain.E_TradingMode;
 import com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode;
-import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
 import com.wizaord.boursycrypto.gdax.service.AccountService;
@@ -16,9 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
-import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.ACHAT;
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.VENTE;
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode.BENEFICE;
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode.WAITING_FOR_BENEFICE;
@@ -40,9 +35,10 @@ public class TradeService {
 
     private Double lastCurrentPriceReceived;
     private double currentPrice;
-    private E_TradingMode traderMode = E_TradingMode.NOORDER;
     private Order lastBuyOrder;
     private Order stopOrderCurrentOrder;
+    @Autowired
+    private TradingMode tradeMode;
 
     public void notifyNewTickerMessage(final Ticker ticMessage) {
         this.lastCurrentPriceReceived = ticMessage.getPrice().doubleValue();
@@ -71,14 +67,9 @@ public class TradeService {
         // on va travailler avec le currentPrice, on le sauvegarde
         this.currentPrice = this.lastCurrentPriceReceived;
 
-        switch (this.traderMode) {
-            case NOORDER:
-                LOG.info("MODE UNKNOWN- determination du mode de fonctionnement");
-                this.determineTradeMode();
-                break;
+        switch (this.tradeMode.getTraderMode()) {
             case ACHAT:
                 LOG.info("MODE ACHAT - cours {}", this.currentPrice);
-//        this.doTradingBuyCheck();
                 break;
             case VENTE:
                 this.logVenteEvolution();
@@ -90,24 +81,6 @@ public class TradeService {
         }
     }
 
-
-    /**
-     * Fonction qui permet de determiner dans quel mode de fonctionnement on se trouve
-     */
-    private void determineTradeMode() {
-        // on va verifier si on a pas encore des coins.
-        if (this.accountService.getBtc() > 0) {
-            LOG.info("CHECK MODE - coin in wallet <{}>. Looking for last buy order", this.accountService.getBtc().doubleValue());
-            final Optional<Fill> lastBuyFill = this.orderService.getLastBuyFill();
-            if (lastBuyFill.isPresent()) {
-                LOG.info("CHECK MODE - Find last order buy. Inject order in this AWESOME project");
-                this.notifyNewOrder(lastBuyFill.get().mapToOrder());
-                return;
-            }
-        }
-        LOG.info("CHECK MODE - No Btc in wallet. Set en ACHAT MODE");
-        this.traderMode = ACHAT;
-    }
 
 
     /**
@@ -144,9 +117,9 @@ public class TradeService {
     public void notifyNewOrder(final Order order) {
         LOG.info("NEW ORDER - Receive order {}", order);
         slackService.postCustomMessage("NEW ORDER - Handle order " + order);
+        this.tradeMode.setTraderMode(VENTE);
         this.accountService.refreshBalance();
         this.lastBuyOrder = order;
-        this.traderMode = VENTE;
     }
 
     public void logVenteEvolution() {
@@ -267,7 +240,7 @@ public class TradeService {
      */
     public void notifyStopOrderPlace(final Order order) {
         slackService.postCustomMessage("STOP SELL ORDER HANDLE a " + order.getStop_price() + " pour " + order.getSize() + " coins");
+        this.tradeMode.setTraderMode(VENTE);
         this.stopOrderCurrentOrder = order;
-        this.traderMode = VENTE;
     }
 }

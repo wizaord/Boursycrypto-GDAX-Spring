@@ -30,10 +30,7 @@ repositories {
 dependencies {
     compile('com.fasterxml.jackson.core:jackson-databind')
     compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
-    compile('org.springframework.boot:spring-boot-starter-websocket') {
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-    }
-    compile('org.springframework.boot:spring-boot-starter-jetty')
+    compile('org.springframework.boot:spring-boot-starter-websocket')
     compile('org.springframework:spring-messaging')
     compile('org.springframework.boot:spring-boot-configuration-processor')
     compileOnly('org.projectlombok:lombok')
