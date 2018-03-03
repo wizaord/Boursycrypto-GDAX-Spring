@@ -1,13 +1,14 @@
 package com.wizaord.boursycrypto.gdax.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wizaord.boursycrypto.gdax.domain.E_FeedMessage;
 import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
+import com.wizaord.boursycrypto.gdax.domain.feedmessage.E_FeedMessage;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
 import com.wizaord.boursycrypto.gdax.service.trade.TradeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -24,6 +25,8 @@ public class HandleFeedMessageService {
   private TradeService tradeService;
   @Autowired
   private TendanceService tendanceService;
+  @Autowired
+  private JmsMessagingTemplate jmsTemplate;
 
   /**
    * Cette fonction permet à partir d'un object JSON, de recupérer l'ordre recu par GDAX
@@ -56,6 +59,7 @@ public class HandleFeedMessageService {
   }
 
   protected void handleTickerMessage(final Ticker tickerMessage) {
+    jmsTemplate.convertAndSend("gdax.feed.ticker", "plop");
     tendanceService.notifyTickerMessage(tickerMessage);
     tradeService.notifyNewTickerMessage(tickerMessage);
   }

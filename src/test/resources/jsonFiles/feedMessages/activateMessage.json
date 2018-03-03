@@ -1,0 +1,14 @@
+{
+  "type": "activate",
+  "product_id": "LTC-EUR",
+  "order_id": "1fb6d0cc-c844-47f3-937f-959b0dbdc408",
+  "user_id": "5a0072d571047e00bf56138a",
+  "profile_id": "bc56d860-7e12-4111-8f1e-da0dbb27696b",
+  "stop_type": "loss",
+  "side": "sell",
+  "stop_price": "300.00000000",
+  "limit_price": "290.00000000",
+  "size": "0.42533266",
+  "taker_fee_rate": "0.0030000000",
+  "time": "2018-03-03T20:55:02.854000Z"
+}

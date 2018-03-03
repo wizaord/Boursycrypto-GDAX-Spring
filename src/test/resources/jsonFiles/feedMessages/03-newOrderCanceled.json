@@ -1,0 +1,11 @@
+{
+  "type": "done",
+  "side": "sell",
+  "order_id": "cbcbea7a-6c03-470c-b30b-76ba13538776",
+  "reason": "canceled",
+  "product_id": "LTC-EUR",
+  "remaining_size": "0.42533266",
+  "user_id": "5a0072d571047e00bf56138a",
+  "profile_id": "bc56d860-7e12-4111-8f1e-da0dbb27696b",
+  "time": "2018-03-03T20:38:24.105000Z"
+}
