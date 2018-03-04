@@ -3,9 +3,10 @@ package com.wizaord.boursycrypto.gdax;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.api.Order;
+import com.wizaord.boursycrypto.gdax.domain.feedmessage.OrderActivated;
 import com.wizaord.boursycrypto.gdax.listener.weksocket.FeedListener;
 import com.wizaord.boursycrypto.gdax.service.AccountService;
-import com.wizaord.boursycrypto.gdax.service.OrderService;
+import com.wizaord.boursycrypto.gdax.service.gdax.OrderService;
 import com.wizaord.boursycrypto.gdax.service.notify.SlackService;
 import com.wizaord.boursycrypto.gdax.service.trade.TradeService;
 import com.wizaord.boursycrypto.gdax.service.trade.TradingMode;
@@ -57,15 +58,10 @@ public class GDaxApplicationRunner implements ApplicationRunner {
             removeLastCurrentOrder();
         }
 
-        // if btc are stored in wallet
-        if (this.accountService.getBtc() > 0) {
-            // mode vente
-            retrieveCurrentOrder();
-            this.tradeMode.setTraderMode(VENTE);
-        } else {
-            // mode achat
-            this.tradeMode.setTraderMode(ACHAT);
-        }
+        // if order is placed => sell MODE
+        // if BTC exists => sell MODE
+        // else => BUY MODE
+        initTradeMode();
 
         // starting the webSocket
         startWebSocket();
@@ -81,17 +77,30 @@ public class GDaxApplicationRunner implements ApplicationRunner {
         orderService.cancelOrders();
     }
 
-    private void retrieveCurrentOrder() {
+    /**
+     *
+     // if order is placed => sell MODE
+     // if BTC exists => sell MODE
+     // else => BUY MODE
+     */
+    private void initTradeMode() {
         Optional<List<Order>> orders = orderService.loadOrders();
-        if (orders.isPresent() && ! orders.get().isEmpty()) {
-            // recuperation et injection de l'ordre
-            final Order firstOrder = orders.get().get(0);
-            LOG.info("Loaded current order : " + firstOrder);
-            this.tradeService.notifyStopOrderPlace(firstOrder);
+        boolean isOrderExixt = (orders.isPresent() && ! orders.get().isEmpty());
+        if (this.accountService.getBtc() > 0 || isOrderExixt) {
+            // notify order in the trade service
+            if (isOrderExixt) {
+                final Order firstOrder = orders.get().get(0);
+                this.tradeService.notifySellOrderActivated(new OrderActivated(firstOrder));
+            }
+            // recuperation et injection de l'ordre d'achat
+            final Fill lastFill = this.orderService.getLastBuyFill().get();
+            this.tradeService.notifyBuyOrderPassed(lastFill);
+            // mode vente
+            this.tradeMode.setTraderMode(VENTE);
+        } else {
+            // mode achat
+            this.tradeMode.setTraderMode(ACHAT);
         }
-        // recuperation et injection de l'ordre d'achat
-        final Fill lastFill = this.orderService.getLastBuyFill().get();
-        this.tradeService.notifyNewOrder(lastFill.mapToOrder());
     }
 
     private void startWebSocket() {

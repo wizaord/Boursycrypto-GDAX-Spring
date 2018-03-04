@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.auth.SignatureHeader;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.SubscribeRequest;
-import com.wizaord.boursycrypto.gdax.service.HandleFeedMessageService;
+import com.wizaord.boursycrypto.gdax.service.MessageDispatcherService;
 import com.wizaord.boursycrypto.gdax.service.SignatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class FeedListener {
     @Autowired
     private ApplicationProperties applicationProperties;
     @Autowired
-    private HandleFeedMessageService handleFeedMessageService;
+    private MessageDispatcherService handleFeedMessageService;
     @Autowired
     private WebSocketContainer webSocketContainer;
 
@@ -63,8 +63,6 @@ public class FeedListener {
         final SubscribeRequest subscriberequest = SubscribeRequest.builder()
                 .type("subscribe")
                 .product_id(applicationProperties.getProduct().getName())
-//            .channel("level2")
-//                .channel("heartbeat")
                 .channel("ticker")
                 .channel("user")
                 .build();
@@ -87,7 +85,7 @@ public class FeedListener {
     @OnMessage
     public void processMessage(String message) {
         LOG.debug("GDAX FEED : receive message : {}", message);
-        this.handleFeedMessageService.handleMessage(message);
+        this.handleFeedMessageService.handleJsonMessage(message);
     }
 
     @OnClose

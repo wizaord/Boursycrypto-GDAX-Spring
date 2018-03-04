@@ -30,8 +30,8 @@ repositories {
 dependencies {
     compile('com.fasterxml.jackson.core:jackson-databind')
     compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
-    compile("org.springframework.boot:spring-boot-starter-activemq")
-    compile("org.apache.activemq:activemq-broker")
+//    compile("org.springframework.boot:spring-boot-starter-activemq")
+//    compile("org.apache.activemq:activemq-broker")
     compile('org.springframework.boot:spring-boot-starter-websocket')
     compile('org.springframework:spring-messaging')
     compile('org.springframework.boot:spring-boot-configuration-processor')

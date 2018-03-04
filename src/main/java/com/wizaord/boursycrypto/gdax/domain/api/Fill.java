@@ -29,15 +29,4 @@ public class Fill {
   private String side;
   private String settled;
 
-
-  public Order mapToOrder() {
-    return Order.builder()
-            .id(this.order_id)
-            .price(this.price)
-            .side(this.side)
-            .fill_fees(this.fee)
-            .size(this.size)
-            .create_at(this.created_at)
-            .build();
-  }
 }
