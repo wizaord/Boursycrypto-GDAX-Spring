@@ -6,18 +6,21 @@ import com.wizaord.boursycrypto.gdax.domain.auth.SignatureHeader;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.SubscribeRequest;
 import com.wizaord.boursycrypto.gdax.service.MessageDispatcherService;
 import com.wizaord.boursycrypto.gdax.service.SignatureService;
+import org.glassfish.tyrus.client.ClientManager;
+import org.glassfish.tyrus.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import javax.websocket.*;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import static com.wizaord.boursycrypto.gdax.config.WebSocketConfiguration.GDAX_WEBSOCKET;
 
-@Service
+@Component
 @ClientEndpoint
 public class FeedListener {
 
@@ -31,28 +34,20 @@ public class FeedListener {
     private ApplicationProperties applicationProperties;
     @Autowired
     private MessageDispatcherService handleFeedMessageService;
-    @Autowired
-    private WebSocketContainer webSocketContainer;
 
-    private Session session;
 
     /**
      * Open the connection with the webSocket server
      */
     public void startConnection() {
-        while(session == null || !session.isOpen()) {
-            // start feed
-            LOG.info("Connecting WebSocket to URL : {}", GDAX_WEBSOCKET);
-            try {
-                session = webSocketContainer.connectToServer(this, URI.create(GDAX_WEBSOCKET));
-            } catch (DeploymentException | IOException e) {
-                LOG.error("Unable to connect the webSocket. Wait and restart", e);
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException e1) {
-                    LOG.error("Unable to wait 10 seconds", e1);
-                }
-            }
+        ClientManager client = ClientManager.createClient();
+        client.getProperties().put(ClientProperties.RECONNECT_HANDLER, new ReconnectHandler());
+
+        LOG.info("Connecting WebSocket to URL : {}", GDAX_WEBSOCKET);
+        try {
+            client.connectToServer(this, new URI(GDAX_WEBSOCKET));
+        } catch (DeploymentException | URISyntaxException | IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -91,8 +86,6 @@ public class FeedListener {
     @OnClose
     public void processClose(Session session, CloseReason reason) throws IOException {
         LOG.debug("WebSocket has been close with reason " + reason.toString());
-        this.session = null;
-        this.startConnection();
     }
 
     @OnError
