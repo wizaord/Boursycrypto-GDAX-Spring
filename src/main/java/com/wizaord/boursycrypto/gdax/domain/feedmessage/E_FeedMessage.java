@@ -11,6 +11,7 @@ public enum E_FeedMessage {
     OPEN("open", OrderOpen.class),
     DONE("done",OrderDone.class),
     ACTIVATE("activate", OrderActivated.class),
+    MATCH("match", Match.class),
     SUBSCRIPTION("subscriptions",SubscriptionMessage.class);
 
     /**

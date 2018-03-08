@@ -3,8 +3,8 @@ package com.wizaord.boursycrypto.gdax.service.trade;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
+import com.wizaord.boursycrypto.gdax.domain.feedmessage.Match;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.OrderActivated;
-import com.wizaord.boursycrypto.gdax.domain.feedmessage.OrderDone;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.OrderOpen;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
 import com.wizaord.boursycrypto.gdax.service.AccountService;
@@ -16,6 +16,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.ACHAT;
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.VENTE;
@@ -123,26 +126,42 @@ public class TradeService {
     }
 
     public void notifyBuyOrderPassed(final Fill order) {
-        final String message = "NEW FILL - Price <" + order.getPrice() + "> size<" + order.getSize() + "> fee<" + order.getFee() + ">";
-        LOG.info(message);
-        slackService.postCustomMessage(message);
-        this.tradeMode.setTraderMode(VENTE);
-        this.accountService.refreshBalance();
-        this.lastBuyOrder = order;
+        // on recherche toutes les fills pour cette order.
+        Optional<List<Fill>> fills = this.orderService.loadFillsForOrderId(order.getOrder_id());
+
+        if (fills.isPresent()) {
+            Fill reducedFill = fills.get().stream()
+                    .reduce(order, (a, b) -> {
+                        a.setFee(a.getFee().add(b.getFee()));
+                        a.setSize(a.getSize().add(b.getSize()));
+                        return a;
+                    });
+            final String message = "NEW FILL - Price <" + df.format(order.getPrice()) + "> size<" + df.format(reducedFill.getSize()) + "> fee<" + df.format(reducedFill.getFee()) + ">";
+            LOG.info(message);
+            slackService.postCustomMessage(message);
+            this.tradeMode.setTraderMode(VENTE);
+            this.accountService.refreshBalance();
+            this.lastBuyOrder = reducedFill;
+        }
     }
 
-    public void notifySellOrderFinished(final OrderDone order) {
-        this.stopOrderCurrentOrder = null;
-        this.accountService.refreshBalance();
-        this.tradeMode.setTraderMode(ACHAT);
-
-        final double sellPrice = this.currentPrice;
-        final double balance = getBalance(sellPrice);
-        final String message = "ORDER PASSED => price: " + df.format(sellPrice) + " - gain/perte " + balance + " evol: " + MathUtils.calculatePourcentDifference(sellPrice, this.lastBuyOrder.getPrice().doubleValue());
+    public void notifySellOrderFinished(final Match order) {
+        final double sellPrice = order.getPrice();
+        final double balance = getBalance(sellPrice, order.getSize());
+        final String message = "ORDER PASSED => price: " + df.format(sellPrice) + " quantity :" + df.format(order.getSize()) + " - gain/perte " + df.format(balance)+ " evol: " +df.format(MathUtils.calculatePourcentDifference(sellPrice, this.lastBuyOrder.getPrice().doubleValue()));
 
         LOG.info(message);
         this.slackService.postCustomMessage(message);
 
+        stopOrderRemove();
+        this.accountService.refreshBalance();
+        if (this.accountService.getBtc() > 0) {
+            //Still BTC... Set in VENTE MODE
+            this.tradeMode.setTraderMode(VENTE);
+        } else {
+            // nothing to sell, pass in BUY MODE
+            this.tradeMode.setTraderMode(ACHAT);
+        }
     }
 
     public void logVenteEvolution() {
@@ -151,16 +170,18 @@ public class TradeService {
         final double evolution = MathUtils.calculatePourcentDifference(this.currentPrice, this.lastBuyOrder.getPrice().doubleValue());
 
         String message = "COURS EVOL : - achat " + df.format(price) + " - fee " + df.format(fee) + " - now " + this.currentPrice;
-        message += " - benefice " + df.format(this.getBalance(this.currentPrice)) + " E - evolution " + df.format(evolution) + "%";
+        message += " - benefice " + df.format(this.getBalance(this.currentPrice, this.lastBuyOrder.getSize().doubleValue())) + " E - evolution " + df.format(evolution) + "%";
         message += (this.stopOrderCurrentOrder != null) ? " <sop " + df.format(this.stopOrderCurrentOrder.getPrice()) + "> " : " <sonp>";
         LOG.info(message);
     }
 
 
-    public double getBalance(final double currentPrice) {
+    public double getBalance(final double currentPrice, final double quantity) {
         final double lastOrderPrice = this.lastBuyOrder.getPrice().doubleValue();
-        final double quantity = this.lastBuyOrder.getSize().doubleValue();
-        final double feeAchat = this.lastBuyOrder.getFee().doubleValue();
+        double feeAchat = this.lastBuyOrder.getFee().doubleValue();
+        if (feeAchat != 0) {
+            feeAchat = quantity * lastOrderPrice * 0.0025;
+        }
         final double feeVente = quantity * currentPrice * 0.0025;
 
         final double prixVente = (quantity * currentPrice) - feeVente;
@@ -243,16 +264,19 @@ public class TradeService {
     }
 
 
+    void stopOrderRemove() {
+        if (this.stopOrderCurrentOrder != null) {
+            this.orderService.cancelOrder(this.stopOrderCurrentOrder.getOrderId());
+            this.stopOrderCurrentOrder = null;
+        }
+    }
     /**
      * Fonction qui positionne un stopOrder a XX% en dessous du court actuel.
      * Le XX% est configurable dans le fichier de configuration
      */
     public void stopOrderPlace(final double price) {
         // si un stop order est deja present, il faut le supprimer
-        if (this.stopOrderCurrentOrder != null) {
-            this.orderService.cancelOrder(this.stopOrderCurrentOrder.getOrderId());
-            this.stopOrderCurrentOrder = null;
-        }
+        stopOrderRemove();
         this.orderService.placeStopSellOrder(price, this.accountService.getBtc())
                 .ifPresent(order -> {
                     notifySellOrderActivated(new OrderActivated(order));
@@ -295,4 +319,5 @@ public class TradeService {
             LOG.warn("Order with Id {} has not handle by application", orderId);
         }
     }
+
 }

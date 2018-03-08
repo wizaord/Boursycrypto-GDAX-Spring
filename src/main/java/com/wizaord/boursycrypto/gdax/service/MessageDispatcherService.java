@@ -2,7 +2,9 @@ package com.wizaord.boursycrypto.gdax.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
+import com.wizaord.boursycrypto.gdax.domain.api.Fill;
 import com.wizaord.boursycrypto.gdax.domain.feedmessage.*;
+import com.wizaord.boursycrypto.gdax.service.gdax.OrderService;
 import com.wizaord.boursycrypto.gdax.service.trade.TradeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,8 @@ public class MessageDispatcherService {
     private TradeService tradeService;
     @Autowired
     private TendanceService tendanceService;
+    @Autowired
+    private OrderService orderService;
 
     /**
      * Cette fonction permet à partir d'un object JSON, de recupérer l'ordre recu par GDAX
@@ -65,10 +69,22 @@ public class MessageDispatcherService {
             LOG.info("Order received by GDAX");
         } else if (gdaxAction instanceof SubscriptionMessage) {
             LOG.debug("Receive Subscription message");
+        } else if (gdaxAction instanceof Match) {
+            handleMatchMessage((Match)gdaxAction);
         } else {
             LOG.error("Unable to handle message with type {}", gdaxAction.getType());
         }
 
+    }
+
+    private void handleMatchMessage(Match matchOrder) {
+        LOG.info("Match message {}", matchOrder);
+        if (matchOrder.getSide().equals("sell")) {
+            // we have buy something
+        } else {
+            // we have sell something
+            this.tradeService.notifySellOrderFinished(matchOrder);
+        }
     }
 
     protected void handleOrderDoneMessage(final OrderDone orderDoneMessage) {
@@ -81,12 +97,10 @@ public class MessageDispatcherService {
             } else {
                 // order has been executed
                 LOG.debug("Finish order message has been received");
-                this.tradeService.notifySellOrderFinished(orderDoneMessage);
             }
         } else {
-            // TODO : buy message
-            // TODO : Added the order & fill
-            // OrderDone message OrderDone(time=Wed Mar 07 15:58:07 CET 2018, productId=ETH-EUR, sequence=601882506, price=634.99000000, orderId=1deba518-6df6-46e8-a7c1-902f79963f69, reason=canceled, side=buy, remainingSize=0.00498383)
+            final Fill lastFill = this.orderService.getLastBuyFill().get();
+            this.tradeService.notifyBuyOrderPassed(lastFill);
         }
     }
 

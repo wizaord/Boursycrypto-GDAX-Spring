@@ -69,6 +69,17 @@ public class OrderService {
         }
     }
 
+    public Optional<List<Fill>> loadFillsForOrderId(final String orderId) {
+        Optional<List<Fill>> fills = this.loadFills();
+        if (fills.isPresent()) {
+            return Optional.of(fills.get()
+                    .stream()
+                    .filter(fill -> fill.getOrder_id().equals(orderId))
+                    .collect(Collectors.toList()));
+        }
+        return Optional.empty();
+    }
+
     public Optional<Fill> getLastBuyFill() {
         final Optional<List<Fill>> fills = this.loadFills();
         if (fills.isPresent()) {
