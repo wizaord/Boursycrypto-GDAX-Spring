@@ -63,6 +63,8 @@ public class MessageDispatcherService {
             handleOrderDoneMessage((OrderDone) gdaxAction);
         } else if (gdaxAction instanceof OrderReceived) {
             LOG.info("Order received by GDAX");
+        } else if (gdaxAction instanceof SubscriptionMessage) {
+            LOG.debug("Receive Subscription message");
         } else {
             LOG.error("Unable to handle message with type {}", gdaxAction.getType());
         }

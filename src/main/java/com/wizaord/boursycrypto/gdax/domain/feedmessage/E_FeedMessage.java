@@ -2,7 +2,6 @@ package com.wizaord.boursycrypto.gdax.domain.feedmessage;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
 
 import java.util.Optional;
 
@@ -12,7 +11,7 @@ public enum E_FeedMessage {
     OPEN("open", OrderOpen.class),
     DONE("done",OrderDone.class),
     ACTIVATE("activate", OrderActivated.class),
-    SUBSCRIPTION("subscriptions",GenericFeedMessage.class);
+    SUBSCRIPTION("subscriptions",SubscriptionMessage.class);
 
     /**
      * The value of the type parameter in the feed message
