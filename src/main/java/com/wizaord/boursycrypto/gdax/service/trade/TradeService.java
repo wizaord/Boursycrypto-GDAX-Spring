@@ -16,7 +16,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -125,11 +127,13 @@ public class TradeService {
         return WAITING_FOR_BENEFICE;
     }
 
-    public void notifyBuyOrderPassed(final Fill order) {
+    public void notifyBuyOrderPassed(Fill order) {
         // on recherche toutes les fills pour cette order.
         Optional<List<Fill>> fills = this.orderService.loadFillsForOrderId(order.getOrder_id());
 
         if (fills.isPresent()) {
+            order.setFee(new BigDecimal(0));
+            order.setSize(new BigDecimal(0));
             Fill reducedFill = fills.get().stream()
                     .reduce(order, (a, b) -> {
                         a.setFee(a.getFee().add(b.getFee()));
@@ -266,7 +270,11 @@ public class TradeService {
 
     void stopOrderRemove() {
         if (this.stopOrderCurrentOrder != null) {
-            this.orderService.cancelOrder(this.stopOrderCurrentOrder.getOrderId());
+            try {
+                this.orderService.cancelOrder(this.stopOrderCurrentOrder.getOrderId());
+            } catch (HttpClientErrorException e) {
+                LOG.debug("order already deleted");
+            }
             this.stopOrderCurrentOrder = null;
         }
     }
