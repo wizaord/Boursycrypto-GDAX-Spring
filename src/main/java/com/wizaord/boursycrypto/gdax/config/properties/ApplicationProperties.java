@@ -8,10 +8,11 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Data
 public class ApplicationProperties {
-  private Auth auth;
-  private Product product;
-  private Trader trader;
-  private Historique historique;
-  private Slack slack;
+    private Configuration configuration;
+    private Auth auth;
+    private Product product;
+    private Trader trader;
+    private Historique historique;
+    private Slack slack;
 }
 

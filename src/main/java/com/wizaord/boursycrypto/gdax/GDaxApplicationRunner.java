@@ -25,7 +25,7 @@ import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.ACHAT;
 import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.VENTE;
 
 @Component
-@Profile("PROD")
+@Profile({"PROD", "SANDBOX"})
 public class GDaxApplicationRunner implements ApplicationRunner {
 
     private static final Logger LOG = LoggerFactory.getLogger(GDaxApplicationRunner.class);

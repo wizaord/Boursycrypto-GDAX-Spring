@@ -13,9 +13,10 @@ spring:
     application:
         name: BOURSYCRYPTO GDAX
     profiles:
-        active: PROD
-        #include: BTC
-        include: ETH
+#        active: PROD
+        active : SANDBOX
+        include: BTC
+#        include: ETH
 #        include: LTC
     jackson:
         serialization:
