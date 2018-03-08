@@ -70,6 +70,7 @@ public class MessageDispatcherService {
     }
 
     protected void handleOrderDoneMessage(final OrderDone orderDoneMessage) {
+        LOG.info("OrderDone message {}", orderDoneMessage);
         if (orderDoneMessage.getSide().equals("sell")) {
             if (orderDoneMessage.getReason().equals("canceled")) {
                 // order has been canceled
@@ -82,6 +83,8 @@ public class MessageDispatcherService {
             }
         } else {
             // TODO : buy message
+            // TODO : Added the order & fill
+            // OrderDone message OrderDone(time=Wed Mar 07 15:58:07 CET 2018, productId=ETH-EUR, sequence=601882506, price=634.99000000, orderId=1deba518-6df6-46e8-a7c1-902f79963f69, reason=canceled, side=buy, remainingSize=0.00498383)
         }
     }
 

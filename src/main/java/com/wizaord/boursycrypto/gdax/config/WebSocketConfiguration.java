@@ -22,7 +22,7 @@ public class WebSocketConfiguration {
   }
 
   @Bean
-  public WebSocketContainer getWebSocketContainer() {
+  public WebSocketContainer gdaxWebSocketContainer() {
       WebSocketContainer container = ContainerProvider.getWebSocketContainer();
       container.setDefaultMaxTextMessageBufferSize(9999999);
       container.setDefaultMaxSessionIdleTimeout(0);

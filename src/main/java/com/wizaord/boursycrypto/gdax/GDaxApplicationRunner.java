@@ -84,7 +84,7 @@ public class GDaxApplicationRunner implements ApplicationRunner {
      // else => BUY MODE
      */
     private void initTradeMode() {
-        Optional<List<Order>> orders = orderService.loadOrders();
+        Optional<List<Order>> orders = orderService.loadSellOrders();
         boolean isOrderExixt = (orders.isPresent() && ! orders.get().isEmpty());
         if (this.accountService.getBtc() > 0 || isOrderExixt) {
             // notify order in the trade service

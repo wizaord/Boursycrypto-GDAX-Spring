@@ -3,10 +3,11 @@
 <configuration scan="true">
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <logger name="com.wizaord" level="info"/>
-    <logger name="com.wizaord.boursycrypto.gdax.listener" level="INFO"/>
+    <logger name="com.wizaord" level="INFO"/>
+    <logger name="com.wizaord.boursycrypto.gdax.listener" level="WARN"/>
     <logger name="com.wizaord.boursycrypto.gdax.service.notify" level="INFO"/>
     <logger name="com.wizaord.boursycrypto.gdax.interceptor" level="INFO"/>
+    <logger name="com.wizaord.boursycrypto.gdax.service.trade.TradeBuyService" level="INFO"/>
 
     <logger name="org.springframework" level="WARN"/>
     <logger name="org.springframework.web" level="WARN"/>

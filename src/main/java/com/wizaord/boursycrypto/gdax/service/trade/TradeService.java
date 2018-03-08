@@ -68,6 +68,11 @@ public class TradeService {
             return;
         }
 
+        if (currentPrice == this.lastCurrentPriceReceived) {
+            LOG.debug("Pas d'evolution du Prix. En attente de changement.");
+            return;
+        }
+
         // on va travailler avec le currentPrice, on le sauvegarde
         this.currentPrice = this.lastCurrentPriceReceived;
 
@@ -127,15 +132,17 @@ public class TradeService {
     }
 
     public void notifySellOrderFinished(final OrderDone order) {
-        final double balance = getBalance(order.getPrice().doubleValue());
-        final String message = "ORDER PASSED => price: " + df.format(order.getPrice()) + " - gain/perte " + balance + " evol: " + MathUtils.calculatePourcentDifference(order.getPrice().doubleValue(), this.lastBuyOrder.getPrice().doubleValue());
+        this.stopOrderCurrentOrder = null;
+        this.accountService.refreshBalance();
+        this.tradeMode.setTraderMode(ACHAT);
+
+        final double sellPrice = this.currentPrice;
+        final double balance = getBalance(sellPrice);
+        final String message = "ORDER PASSED => price: " + df.format(sellPrice) + " - gain/perte " + balance + " evol: " + MathUtils.calculatePourcentDifference(sellPrice, this.lastBuyOrder.getPrice().doubleValue());
 
         LOG.info(message);
         this.slackService.postCustomMessage(message);
 
-        this.stopOrderCurrentOrder = null;
-        this.accountService.refreshBalance();
-        this.tradeMode.setTraderMode(ACHAT);
     }
 
     public void logVenteEvolution() {

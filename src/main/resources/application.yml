@@ -15,8 +15,8 @@ spring:
     profiles:
         active: PROD
         #include: BTC
-        #include: ETH
-        include: LTC
+        include: ETH
+#        include: LTC
     jackson:
         serialization:
           write-dates-as-timestamps : false

@@ -34,13 +34,15 @@ public class FeedListener {
     private ApplicationProperties applicationProperties;
     @Autowired
     private MessageDispatcherService handleFeedMessageService;
+    @Autowired
+    private WebSocketContainer webSocketContainer;
 
 
     /**
      * Open the connection with the webSocket server
      */
     public void startConnection() {
-        ClientManager client = ClientManager.createClient();
+        ClientManager client = ClientManager.createClient(webSocketContainer);
         client.getProperties().put(ClientProperties.RECONNECT_HANDLER, new ReconnectHandler());
 
         LOG.info("Connecting WebSocket to URL : {}", GDAX_WEBSOCKET);

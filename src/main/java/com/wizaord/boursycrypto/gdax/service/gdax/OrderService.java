@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.wizaord.boursycrypto.gdax.utils.MathUtils.df;
-
 @Service
 public class OrderService {
     private static final Logger LOG = LoggerFactory.getLogger(OrderService.class);
@@ -45,6 +43,16 @@ public class OrderService {
                     .filter(o -> o.getProduct_id().equals(this.applicationProperties.getProduct().getName()))
                     .collect(Collectors.toList()));
         }
+    }
+
+    public Optional<List<Order>> loadSellOrders() {
+        Optional<List<Order>> orders = this.loadOrders();
+        if (orders.isPresent()) {
+            return Optional.of(orders.get().stream()
+                    .filter(o -> o.getSide().equals("sell"))
+                    .collect(Collectors.toList()));
+        }
+        return Optional.empty();
     }
 
     public Optional<List<Fill>> loadFills() {
@@ -92,11 +100,11 @@ public class OrderService {
                 .side("sell")
                 .type("limit")
                 .size(String.valueOf(nbCoin))
-                .price(df.format(price))
+                .price(stringPlacePrice)
                 .build();
 
-        LOG.info("Positionnement d'un Limit Order en vente a {} pour {}", df.format(price), nbCoin);
-        slackService.postCustomMessage("positionnement d un LIMIT SELL ORDER a " + df.format(price) + " pour " + nbCoin + " coins");
+        LOG.info("Positionnement d'un Limit Order en vente a {} pour {}", stringPlacePrice, nbCoin);
+        slackService.postCustomMessage("positionnement d un LIMIT SELL ORDER a " + stringPlacePrice + " pour " + nbCoin + " coins");
 
         final ResponseEntity<Order> placeOrderResponse = restTemplate.postForEntity("/orders", placeOrder, Order.class);
         if (placeOrderResponse.getStatusCode() != HttpStatus.OK) {
@@ -122,6 +130,7 @@ public class OrderService {
                 .build();
 
         LOG.info("Positionnement d'un StopOrder a {} pour {}", stringPlacePrice, nbCoin);
+        slackService.postCustomMessage("positionnement d un STOP SELL ORDER a " + stringPlacePrice + " pour " + nbCoin + " coins");
 
         final ResponseEntity<Order> placeOrderResponse = restTemplate.postForEntity("/orders", placeOrder, Order.class);
         if (placeOrderResponse.getStatusCode() != HttpStatus.OK) {
