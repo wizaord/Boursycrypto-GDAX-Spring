@@ -12,6 +12,10 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.palantir.docker" version "0.19.2"
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
@@ -39,4 +43,10 @@ dependencies {
     compileOnly('org.projectlombok:lombok')
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('io.projectreactor:reactor-test')
+}
+
+docker {
+    name "localhost:5000/${project.group}/boursycrypto"
+    files jar.archivePath
+    buildArgs(['JAR_FILE': "${jar.archiveName}"])
 }
