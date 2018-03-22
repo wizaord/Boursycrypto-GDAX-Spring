@@ -197,10 +197,10 @@ public class TradeService {
      * realisation du trading en mode VENTE
      */
     private void doTradingSell() {
-        final boolean isStopOrderPlaced = (this.stopOrderCurrentOrder == null);
+        final boolean isStopOrderPlaced = (this.stopOrderCurrentOrder != null);
 
         // positionnement du stop order de secours si activé dans le fichier de configuration
-        if (this.appProp.getTrader().getVente().getSecureStopOrder().getActivate() && isStopOrderPlaced) {
+        if (this.appProp.getTrader().getVente().getSecureStopOrder().getActivate() && !isStopOrderPlaced) {
             final double negativeWaitPourcent = this.appProp.getTrader().getVente().getSecureStopOrder().getPourcent();
             final double stopPrice = MathUtils.calculateRemovePourcent(this.currentPrice, negativeWaitPourcent);
             LOG.info("MODE VENTE - Place a SECURE stop order to {}", df.format(stopPrice));
@@ -286,9 +286,7 @@ public class TradeService {
         // si un stop order est deja present, il faut le supprimer
         stopOrderRemove();
         this.orderService.placeStopSellOrder(price, this.accountService.getBtc())
-                .ifPresent(order -> {
-                    notifySellOrderActivated(new OrderActivated(order));
-                });
+                .ifPresent(order -> notifySellOrderActivated(new OrderActivated(order)));
     }
 
     /**
@@ -326,6 +324,8 @@ public class TradeService {
         } else {
             LOG.warn("Order with Id {} has not handle by application", orderId);
         }
+        //refresh balance
+        this.accountService.refreshBalance();
     }
 
 }

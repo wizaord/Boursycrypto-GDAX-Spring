@@ -39,7 +39,7 @@ public class TradeBuyService {
         // Si elles sont toutes baissière et que la dernière est une grosse chute > 2% (sur la minutes)
         // on positionne un stopOrder d'achat
         // et on suit la courbe baissière
-        final List<Tendance> lastEveryMinutesTendances = this.tendanceService.getLastEveryMinutesTendances(15);
+        final List<Tendance> lastEveryMinutesTendances = this.tendanceService.getLastEveryMinutesTendances(30);
         LOG.debug("Retrieve {} tendances", lastEveryMinutesTendances.size());
         this.tendanceAchatLog(lastEveryMinutesTendances);
 
@@ -48,7 +48,7 @@ public class TradeBuyService {
 
         while (lastEveryMinutesTendances.size() != 0 && !lookingForBuy) {
             final Tendance tendance = lastEveryMinutesTendances.remove(0);
-            if (tendance.getEvolPourcentage() < 0.3) {
+            if (tendance.getEvolPourcentage() < this.applicationProperties.getTrader().getAchat().getPourcentageChuteCancelCount()) {
                 // on cumule l'evolution
                 cumulEvolutionNegative += tendance.getEvolPourcentage();
             } else {

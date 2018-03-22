@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class Achat {
-  private Boolean activate;
-  private Integer maxBuyAmount;
-  private Float pourcentageChuteCoursStopOrder;
+    private Boolean activate;
+    private Integer maxBuyAmount;
+    private Float pourcentageChuteCoursStopOrder;
+    private Float pourcentageChuteCancelCount;
 }
