@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -57,7 +59,10 @@ public class OrderService {
 
     public Optional<List<Fill>> loadFills() {
         LOG.debug("Retrieving fills..");
-        final ResponseEntity<Fill[]> fills = restTemplate.getForEntity("/fills", Fill[].class);
+        final UriComponents fillUri = UriComponentsBuilder.fromPath("/fills")
+                .queryParam("product_id", this.applicationProperties.getProduct().getName())
+                .build();
+        final ResponseEntity<Fill[]> fills = restTemplate.getForEntity(fillUri.toUriString(), Fill[].class);
         if (fills.getStatusCode() != HttpStatus.OK) {
             LOG.error("Unable to get the orders");
             return Optional.empty();
