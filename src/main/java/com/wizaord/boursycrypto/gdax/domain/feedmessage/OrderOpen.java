@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -14,6 +15,7 @@ import java.util.Date;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class OrderOpen extends GenericFeedMessage {
     private Date time;
     @JsonProperty("product_id")

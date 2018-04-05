@@ -1,9 +1,6 @@
 package com.wizaord.boursycrypto.gdax;
 
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
-import com.wizaord.boursycrypto.gdax.domain.api.Fill;
-import com.wizaord.boursycrypto.gdax.domain.api.Order;
-import com.wizaord.boursycrypto.gdax.domain.feedmessage.OrderActivated;
 import com.wizaord.boursycrypto.gdax.listener.weksocket.FeedListener;
 import com.wizaord.boursycrypto.gdax.service.AccountService;
 import com.wizaord.boursycrypto.gdax.service.gdax.OrderService;
@@ -17,12 +14,6 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Optional;
-
-import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.ACHAT;
-import static com.wizaord.boursycrypto.gdax.domain.E_TradingMode.VENTE;
 
 @Component
 @Profile({"PROD", "SANDBOX"})
@@ -84,23 +75,7 @@ public class GDaxApplicationRunner implements ApplicationRunner {
      // else => BUY MODE
      */
     private void initTradeMode() {
-        Optional<List<Order>> orders = orderService.loadSellOrders();
-        boolean isOrderExixt = (orders.isPresent() && ! orders.get().isEmpty());
-        if (this.accountService.getBtc() > 0 || isOrderExixt) {
-            // notify order in the trade service
-            if (isOrderExixt) {
-                final Order firstOrder = orders.get().get(0);
-                this.tradeService.notifySellOrderActivated(new OrderActivated(firstOrder));
-            }
-            // recuperation et injection de l'ordre d'achat
-            final Fill lastFill = this.orderService.getLastBuyFill().get();
-            this.tradeService.notifyBuyOrderPassed(lastFill);
-            // mode vente
-            this.tradeMode.setTraderMode(VENTE);
-        } else {
-            // mode achat
-            this.tradeMode.setTraderMode(ACHAT);
-        }
+        this.tradeService.determineTradeMode();
     }
 
     private void startWebSocket() {

@@ -99,8 +99,13 @@ public class MessageDispatcherService {
                 LOG.debug("Finish order message has been received");
             }
         } else {
-            final Fill lastFill = this.orderService.getLastBuyFill().get();
-            this.tradeService.notifyBuyOrderPassed(lastFill);
+            if (orderDoneMessage.getReason().equals("canceled")) {
+                LOG.debug("Buy order has been canceled");
+                this.tradeService.notifyBuyOrderCanceled(orderDoneMessage);
+            } else {
+                final Fill lastFill = this.orderService.getLastBuyFill().get();
+                this.tradeService.notifyBuyOrderPassed(lastFill);
+            }
         }
     }
 

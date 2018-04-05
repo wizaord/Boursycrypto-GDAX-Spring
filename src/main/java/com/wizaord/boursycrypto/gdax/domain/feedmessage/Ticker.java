@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import java.math.BigDecimal;
@@ -35,6 +36,7 @@ import java.util.Date;
 @Builder
 @AllArgsConstructor
 @Value
+@EqualsAndHashCode(callSuper = true)
 public class Ticker extends GenericFeedMessage{
   private String sequence;
   @JsonProperty("product_id")

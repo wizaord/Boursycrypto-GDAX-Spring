@@ -3,10 +3,8 @@ package com.wizaord.boursycrypto.gdax.service.trade;
 import com.wizaord.boursycrypto.gdax.config.properties.ApplicationProperties;
 import com.wizaord.boursycrypto.gdax.domain.E_TradingSellMode;
 import com.wizaord.boursycrypto.gdax.domain.api.Fill;
-import com.wizaord.boursycrypto.gdax.domain.feedmessage.Match;
-import com.wizaord.boursycrypto.gdax.domain.feedmessage.OrderActivated;
-import com.wizaord.boursycrypto.gdax.domain.feedmessage.OrderOpen;
-import com.wizaord.boursycrypto.gdax.domain.feedmessage.Ticker;
+import com.wizaord.boursycrypto.gdax.domain.api.Order;
+import com.wizaord.boursycrypto.gdax.domain.feedmessage.*;
 import com.wizaord.boursycrypto.gdax.service.AccountService;
 import com.wizaord.boursycrypto.gdax.service.gdax.OrderService;
 import com.wizaord.boursycrypto.gdax.service.notify.SlackService;
@@ -305,8 +303,8 @@ public class TradeService {
      */
     public void notifySellOrderOpen(final OrderOpen order) {
         slackService.postCustomMessage("SELL ORDER HANDLE a " + order.getPrice() + " pour " + order.getRemainingSize() + " coins");
-        this.tradeMode.setTraderMode(VENTE);
         this.stopOrderCurrentOrder = order;
+        this.tradeMode.setTraderMode(VENTE);
     }
 
     /**
@@ -325,7 +323,42 @@ public class TradeService {
             LOG.warn("Order with Id {} has not handle by application", orderId);
         }
         //refresh balance
-        this.accountService.refreshBalance();
+//        this.accountService.refreshBalance();
     }
 
+    /**
+     * A buy order has been canceled. Refresh the account and recalculate mode
+     * @param orderDoneMessage
+     */
+    public void notifyBuyOrderCanceled(OrderDone orderDoneMessage) {
+        this.determineTradeMode();
+    }
+
+
+    /**
+     *
+     // if order is placed => sell MODE
+     // if BTC exists => sell MODE
+     // else => BUY MODE
+     */
+    public void determineTradeMode() {
+        this.accountService.refreshBalance();
+        Optional<List<Order>> orders = orderService.loadSellOrders();
+        boolean isOrderExixt = (orders.isPresent() && ! orders.get().isEmpty());
+        if (this.accountService.getBtc() > 0 || isOrderExixt) {
+            // notify order in the trade service
+            if (isOrderExixt) {
+                final Order firstOrder = orders.get().get(0);
+                this.notifySellOrderActivated(new OrderActivated(firstOrder));
+            }
+            // recuperation et injection de l'ordre d'achat
+            final Fill lastFill = this.orderService.getLastBuyFill().get();
+            this.notifyBuyOrderPassed(lastFill);
+            // mode vente
+            this.tradeMode.setTraderMode(VENTE);
+        } else {
+            // mode achat
+            this.tradeMode.setTraderMode(ACHAT);
+        }
+    }
 }

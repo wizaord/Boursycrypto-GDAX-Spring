@@ -3,6 +3,7 @@ package com.wizaord.boursycrypto.gdax.domain.feedmessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wizaord.boursycrypto.gdax.domain.GenericFeedMessage;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
@@ -17,6 +18,7 @@ import java.util.Date;
  * "time":"2018-03-08T12:07:47.033000Z"}
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class Match extends GenericFeedMessage {
     @JsonProperty("trade_id")
     private String tradeId;
