@@ -13,11 +13,12 @@ spring:
     application:
         name: BOURSYCRYPTO GDAX
     profiles:
-#        active: PROD
-        active : SANDBOX
-        include: BTC
+        active: PROD
+#        active : SANDBOX
+#        include: BTC
         #include: ETH
 #        include: LTC
+       include: BCH
     jackson:
         serialization:
           write-dates-as-timestamps : false

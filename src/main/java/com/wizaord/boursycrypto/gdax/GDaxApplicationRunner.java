@@ -6,7 +6,6 @@ import com.wizaord.boursycrypto.gdax.service.AccountService;
 import com.wizaord.boursycrypto.gdax.service.gdax.OrderService;
 import com.wizaord.boursycrypto.gdax.service.notify.SlackService;
 import com.wizaord.boursycrypto.gdax.service.trade.TradeService;
-import com.wizaord.boursycrypto.gdax.service.trade.TradingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +32,6 @@ public class GDaxApplicationRunner implements ApplicationRunner {
     private FeedListener webSocketHandler;
     @Autowired
     private TradeService tradeService;
-    @Autowired
-    private TradingMode tradeMode;
 
     @Override
     public void run(final ApplicationArguments args) {
